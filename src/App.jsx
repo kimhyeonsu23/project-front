@@ -37,16 +37,20 @@ export default App
 */
 // src/App.jsx
 import React from 'react';
-import './App.css';
+//import './App.css';
 import UserForm from './components/UserForm';  // 방금 만든 UserForm 컴포넌트 임포트
 
 function App() {
-    return (
-        <div className="App">
-            <h1>Welcome to the Budget App</h1>
-            <UserForm />  {/* UserForm 컴포넌트 추가 */}
-        </div>
-    );
+  return (
+    <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+          <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-6">
+              <h1 className="text-3xl font-bold text-blue-600 mb-6 text-center">
+                  Welcome to the Budget App
+              </h1>
+              <UserForm />
+          </div>
+      </div>
+  );
 }
 
 export default App;
