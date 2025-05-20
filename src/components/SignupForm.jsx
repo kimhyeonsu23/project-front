@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import icon from '../assets/icon.png';
 
@@ -6,35 +6,79 @@ function SignupForm() {
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [authCode, setAuthCode] = useState('');
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [sentCode, setSentCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // 인증코드 발송 (임시용)
+  useEffect(() => {
+    let timer;
+
+    if (timerActive && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    }
+
+    if (timeLeft === 0) {
+      setTimerActive(false);
+    }
+
+    return () => clearInterval(timer);
+  }, [timerActive, timeLeft]);
+
   const handleSendCode = async () => {
     if (!email) return setError('이메일을 입력해주세요.');
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setSentCode(code);
-    alert(`인증코드 (예시): ${code}`);
-    setError('');
-  };
 
-  // 인증코드 확인
-  const handleVerifyCode = () => {
-    if (authCode === sentCode) {
-      setIsEmailVerified(true);
-      setError('');
-    } else {
-      setError('인증코드가 일치하지 않습니다.');
+    try {
+      const response = await fetch('http://localhost:8080/user/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        alert('이메일 인증코드 전송');
+        setError('');
+        setTimeLeft(300); // 5분
+        setTimerActive(true);
+      } else {
+        setError(result.message || '이메일 전송 실패');
+      }
+    } catch {
+      setError('서버 오류 발생');
     }
   };
 
-  // 회원가입 처리
+  const handleVerifyCode = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/user/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: authCode }),
+      });
+
+      const result = await response.json();
+      if (result.verified) {
+        setIsEmailVerified(true);
+        alert('이메일 인증 성공');
+        setError('');
+        setTimerActive(false);
+      } else {
+        setError(result.message || '인증코드가 일치하지 않습니다.');
+      }
+    } catch {
+      setError('네트워크 오류 발생');
+    }
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
+
     if (!userName || !email || !password || !confirmPassword) {
       setError('모든 항목을 입력해주세요.');
       return;
@@ -49,20 +93,22 @@ function SignupForm() {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/signup', {
+      const response = await fetch('http://localhost:8080/user/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userName, email, password }), // ✅ 이름 포함
+        body: JSON.stringify({ userName, email, password }),
       });
 
-      if (response.ok) {
-        alert('회원가입이 완료되었습니다!');
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        alert('회원가입 완료');
         navigate('/login');
       } else {
-        setError('회원가입에 실패했습니다.');
+        setError(result.message || '회원가입 실패');
       }
     } catch {
-      setError('네트워크 오류가 발생했습니다.');
+      setError('네트워크 오류 발생');
     }
   };
 
@@ -78,7 +124,6 @@ function SignupForm() {
       )}
 
       <form onSubmit={handleSignup} className="w-full max-w-sm space-y-4">
-
         {/* 이름 */}
         <input
           type="text"
@@ -89,7 +134,7 @@ function SignupForm() {
         />
 
         {/* 이메일 입력 & 인증 */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <input
             type="email"
             placeholder="이메일"
@@ -103,16 +148,23 @@ function SignupForm() {
               <button
                 type="button"
                 onClick={handleSendCode}
-                className="flex-1 bg-[#A3E4DB] text-[#5C4033] py-2 rounded-lg text-sm font-semibold hover:bg-[#8FD6CB]"
+                disabled={timerActive}
+                className={`flex-1 bg-[#A3E4DB] text-[#5C4033] py-2 rounded-lg text-sm font-semibold 
+                ${timerActive ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#8FD6CB]'}`}
               >
                 인증코드 발송
               </button>
             </div>
           )}
+          {!isEmailVerified && timerActive && (
+            <p className="text-xs text-[#A89F97]">
+              남은 시간: {Math.floor(timeLeft / 60)}분 {timeLeft % 60}초
+            </p>
+          )}
         </div>
 
         {/* 인증코드 입력 */}
-        {!isEmailVerified && sentCode && (
+        {!isEmailVerified && (
           <div className="flex gap-2">
             <input
               type="text"
