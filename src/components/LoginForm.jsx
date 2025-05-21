@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import icon from '../assets/icon.png';
+import { KAKAO_AUTH_URL,GOOGLE_AUTH_URL } from '../config';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  
+  const handleKakaoLogin = () => {
+  window.location.href = KAKAO_AUTH_URL;
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -16,7 +21,7 @@ function LoginForm() {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/login', {
+        const response = await fetch('http://localhost:8080/user/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -35,15 +40,12 @@ function LoginForm() {
     }
   };
 
-  const handleKakaoLogin = () => {
-    console.log('카카오 로그인 시작!');
-    // 카카오 로그인 연동 코드 추가 예정
-  };
+  
 
   const handleGoogleLogin = () => {
-    console.log('구글 로그인 시작!');
-    // 구글 로그인 연동 코드 추가 예정
+  window.location.href = GOOGLE_AUTH_URL;
   };
+
 
   return (
     <div className="min-h-screen bg-[#FFFDF7] flex flex-col items-center justify-center pt-12 px-4 font-pretendard">
@@ -87,7 +89,6 @@ function LoginForm() {
         <hr className="flex-grow border-[#DDD1C7]" />
       </div>
 
-      
       <div className="w-full max-w-sm space-y-3">
         {/* 카카오 로그인 */}
         <button

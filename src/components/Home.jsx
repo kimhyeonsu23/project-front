@@ -1,13 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function Home() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const email = localStorage.getItem('email');
-    if (!email) {
+    const token = localStorage.getItem('accessToken');
+    const storedEmail = localStorage.getItem('email');
+    const storedName = localStorage.getItem('userName'); // 추가
+
+    if (!token || !storedEmail) {
       navigate('/');
+    } else {
+      setEmail(storedEmail);
+      setUserName(storedName || ''); // userName이 없으면 빈 문자열
     }
   }, [navigate]);
 
@@ -16,13 +24,11 @@ function Home() {
     navigate('/');
   };
 
-  const email = localStorage.getItem('email');
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center font-pretendard bg-[#FFFDF7] px-4 text-center">
       <h2 className="text-2xl sm:text-3xl font-bold text-[#5C4033] leading-relaxed">
-        환영합니다 👋 <br />
-        {email}님!
+        환영합니다 !!!!!!!! <br />
+        {userName || email}님!
       </h2>
 
       <button

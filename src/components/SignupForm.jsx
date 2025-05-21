@@ -103,7 +103,10 @@ function SignupForm() {
 
       if (response.ok && result.success) {
         alert('회원가입 완료');
-        navigate('/login');
+        localStorage.setItem('accessToken', result.token); 
+        localStorage.setItem('email', result.user.email);
+        localStorage.setItem('userName', result.user.userName);      
+        navigate('/home');
       } else {
         setError(result.message || '회원가입 실패');
       }
