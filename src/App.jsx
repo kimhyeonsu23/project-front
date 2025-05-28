@@ -4,8 +4,8 @@ import SignupForm from './components/SignupForm';
 import Home from './components/Home'; 
 import KakaoCallback from './components/KakaoCallback'; 
 import GoogleCallback from './components/GoogleCallback'; 
-import ConsentPage from './components/ConsentPage'; // ✅ 추가
-
+import ConsentPage from './components/ConsentPage';
+import ReceiptUpload  from './components/ReceiptUpload';
 function App() {
   return (
     <BrowserRouter>
@@ -15,7 +15,8 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/oauth/kakao/callback" element={<KakaoCallback />} /> 
         <Route path="/oauth/google/callback" element={<GoogleCallback />} />
-        <Route path="/consent" element={<ConsentPage />} /> {/* ✅ 추가 */}
+        <Route path="/consent" element={<ConsentPage />} /> 
+        <Route path="/home/receipt" element={<ReceiptUpload />} />
       </Routes>
     </BrowserRouter>
   );

@@ -30,6 +30,12 @@ function Home() {
         환영합니다 !!!!!!!! <br />
         {userName || email}님!
       </h2>
+      <button
+        onClick={() => navigate('receipt')}
+        className="mt-4 px-6 py-2 bg-[#FFF1F0] text-[#5C4033] font-medium rounded-lg shadow"
+      >
+        영수증 등록
+      </button>
 
       <button
         onClick={handleLogout}
