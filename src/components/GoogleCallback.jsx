@@ -1,50 +1,56 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { Box, Typography, CircularProgress } from '@mui/material'
 
-function GoogleCallback() {
-  const navigate = useNavigate();
-  const isCalled = useRef(false);
+export default function GoogleCallback() {
+  const navigate = useNavigate()
+  const isCalled = useRef(false)
 
   useEffect(() => {
-    const code = new URL(window.location.href).searchParams.get('code');
+    const code = new URL(window.location.href).searchParams.get('code')
 
     if (code && !isCalled.current) {
-      isCalled.current = true;
-
+      isCalled.current = true
       axios
-        .get("http://localhost:8080/user/oauth/google", { params: { code } })
+        .get('/user/oauth/google', { params: { code } })
         .then((res) => {
-          const { accessToken, email, userName, requiresConsent } = res.data;
-
+          const { accessToken, email, userName, requiresConsent } = res.data
           if (requiresConsent) {
-            localStorage.setItem("pendingEmail", email);
-            localStorage.setItem("pendingUserName", userName);
-            localStorage.setItem("pendingLoginType", "GOOGLE"); 
-            navigate("/consent");
-            return;
+            localStorage.setItem('pendingEmail', email)
+            localStorage.setItem('pendingUserName', userName)
+            localStorage.setItem('pendingLoginType', 'GOOGLE')
+            navigate('/consent')
+            return
           }
-
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("email", email);
-          localStorage.setItem("userName", userName);
-
-          window.history.replaceState({}, "", window.location.pathname);
-          navigate("/home");
+          localStorage.setItem('accessToken', accessToken)
+          localStorage.setItem('email', email)
+          localStorage.setItem('userName', userName)
+          window.history.replaceState({}, '', window.location.pathname)
+          navigate('/home')
         })
         .catch((err) => {
-          console.error('구글 로그인 실패:', err);
-          alert('구글 로그인 실패');
-          navigate('/');
-        });
+          console.error('구글 로그인 실패:', err)
+          alert('구글 로그인 실패')
+          navigate('/')
+        })
     }
-  }, [navigate]);
+  }, [navigate])
 
   return (
-    <div className="text-center mt-10 text-lg text-gray-700">
-      구글 로그인 처리 중...
-    </div>
-  );
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      minHeight="60vh"
+      px={2}
+      textAlign="center"
+    >
+      <CircularProgress />
+      <Typography variant="h6" mt={2} color="textSecondary">
+        구글 로그인 처리 중...
+      </Typography>
+    </Box>
+  )
 }
-
-export default GoogleCallback;

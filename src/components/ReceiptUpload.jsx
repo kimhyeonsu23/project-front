@@ -1,119 +1,231 @@
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react'
+import axios from 'axios'
+import {
+  Box,
+  Typography,
+  Button,
+  Stack,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+} from '@mui/material'
 
-const ReceiptUpload = () => {
-  const [image, setImage] = useState(null);
-  const [ocrResult, setOcrResult] = useState(null);
-  const [keywordId, setKeywordId] = useState("");
+import StorefrontIcon from '@mui/icons-material/Storefront'
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
+import CameraAltIcon from '@mui/icons-material/CameraAlt'
+
+export default function ReceiptUpload() {
+  const [image, setImage] = useState(null)
+  const [ocrResult, setOcrResult] = useState(null)
+  const [keywordId, setKeywordId] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [loadingOCR, setLoadingOCR] = useState(false)
 
   const categories = [
-    { id: 1, name: "외식" },
-    { id: 2, name: "교통" },
-    { id: 3, name: "생활비" },
-    { id: 4, name: "쇼핑" },
-    { id: 5, name: "건강" },
-    { id: 6, name: "교육" },
-    { id: 7, name: "저축/투자" },
-  ];
+    { id: 1, name: '외식' },
+    { id: 2, name: '교통' },
+    { id: 3, name: '생활비' },
+    { id: 4, name: '쇼핑' },
+    { id: 5, name: '건강' },
+    { id: 6, name: '교육' },
+    { id: 7, name: '저축/투자' },
+  ]
 
-  const handleSubmit = async () => {
-  if (!image) {
-    alert("이미지를 선택하세요!");
-    return;
+  const handleOCR = async () => {
+    if (!image) {
+      alert('이미지를 선택하세요!')
+      return
+    }
+    setLoadingOCR(true)
+    const formData = new FormData()
+    formData.append('image', image)
+
+    try {
+      const res = await axios.post(
+        'http://localhost:8080/receipt/ocr',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          withCredentials: true,
+        }
+      )
+      setOcrResult(res.data)
+      setIsEditing(false)
+    } catch (err) {
+      alert('OCR 요청 실패: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setLoadingOCR(false)
+    }
   }
-
-  console.log("보내는 이미지 파일:", image); 
-
-  const formData = new FormData();
-  formData.append("image", image);
-
-  try {
-    const response = await axios.post("http://localhost:8080/receipt/ocr", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data", // ✅ 이 부분 추가됨
-      },
-      withCredentials: true,
-    });
-    console.log("OCR 결과:", response.data);
-    setOcrResult(response.data);
-  } catch (err) {
-    console.error("OCR 오류:", err.response || err);
-    alert("OCR 요청 실패: " + (err.response?.data?.message || err.message));
-  }
-};
 
   const handleCreateReceipt = async () => {
     if (!ocrResult || !keywordId) {
-      alert("OCR 분석 후 카테고리를 선택하세요!");
-      return;
+      alert('OCR 분석 후 카테고리를 선택하세요!')
+      return
     }
-
     try {
       await axios.post(
-        "http://localhost:8080/receipt/createReceipt",
+        '/receipt/createReceipt',
         {
           shop: ocrResult.shopName,
           userId: 1,
           date: ocrResult.date,
-          keywordId: keywordId,
+          keywordId,
         },
         { withCredentials: true }
-      );
-      alert("영수증 등록 완료!");
+      )
+      alert('영수증 등록 완료!')
     } catch (err) {
-      console.error("등록 실패:", err);
-      alert("영수증 저장 실패: " + err.message);
+      alert('영수증 저장 실패: ' + err.message)
     }
-  };
+  }
+
+  const handleInputChange = (field, value) => {
+    if (field === 'totalPrice') {
+      const numeric = parseInt(value.replace(/[^\d]/g, ''), 10) || 0
+      setOcrResult({ ...ocrResult, [field]: numeric })
+    } else {
+      setOcrResult({ ...ocrResult, [field]: value })
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#FFFDF7] flex flex-col items-center justify-start px-6 py-10 font-pretendard">
-      <h2 className="text-2xl font-bold text-[#5C4033] mb-6">영수증 등록</h2>
+    <Box
+      component="main"
+      display="flex"               /* flex 컨테이너 */
+      flexDirection="column"       /* 수직 정렬 */
+      alignItems="center"          /* 가로 중앙 정렬 */
+      justifyContent="flex-start"  /* 상단 배치 */
+      sx={{
+        minHeight: '100vh',        /* 화면 높이 채우기 */
+        pt: 4,                     /* 상단 여백 */
+        pb: 10,                    /* 하단 탭바 여유 확보 */
+        px: 2,
+        bgcolor: 'background.default',
+      }}
+    >
+      {/* 제목을 가운데 정렬 */}
+      <Typography variant="h4" color="primary" gutterBottom sx={{ textAlign: 'center' }}>
+        영수증 등록
+      </Typography>
 
-      <div className="w-full max-w-md bg-white rounded-xl shadow p-6 space-y-4">
-        <input
-          type="file"
-          onChange={(e) => setImage(e.target.files[0])}
-          className="block w-full border border-gray-300 rounded px-3 py-2"
-        />
+      {/* 폼 컨테이너: responsive width + 가운데 정렬 */}
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: { xs: '100%', sm: 360, md: 600, lg: 800 },
+          mx: 'auto',
+        }}
+      >
+        <Stack spacing={2}>
+          <Button variant="outlined" component="label" fullWidth startIcon={<CameraAltIcon />}>
+            영수증 촬영
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={(e) => setImage(e.target.files?.[0] || null)}
+            />
+          </Button>
 
-        <button
-          className="w-full bg-[#FF8A65] text-white font-semibold py-2 rounded hover:bg-[#ff7043]"
-          onClick={handleSubmit}
-        >
-          OCR 분석
-        </button>
+          <Button variant="outlined" component="label" fullWidth>
+            이미지 선택
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => setImage(e.target.files?.[0] || null)}
+            />
+          </Button>
 
-        {ocrResult && (
-          <div className="space-y-3">
-            <p>📍 <strong>상호명:</strong> {ocrResult.shopName}</p>
-            <p>📅 <strong>날짜:</strong> {ocrResult.date}</p>
-            <p>💰 <strong>금액:</strong> {ocrResult.totalPrice.toLocaleString()}원</p>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleOCR}
+            disabled={loadingOCR}
+            fullWidth
+            startIcon={loadingOCR ? <CircularProgress size={20} /> : null}
+          >
+            {loadingOCR ? '분석 중...' : 'OCR 분석'}
+          </Button>
 
-            <select
-              value={keywordId}
-              onChange={(e) => setKeywordId(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            >
-              <option value="">카테고리 선택</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+          {ocrResult && (
+            <Box sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 1, mt: 2 }}>
+              {isEditing ? (
+                <Stack spacing={2}>
+                  <TextField
+                    label="상호명"
+                    fullWidth
+                    value={ocrResult.shopName}
+                    onChange={(e) => handleInputChange('shopName', e.target.value)}
+                    InputProps={{ startAdornment: <StorefrontIcon sx={{ mr: 1 }} /> }}
+                  />
+                  <TextField
+                    label="날짜"
+                    type="date"
+                    fullWidth
+                    value={ocrResult.date}
+                    onChange={(e) => handleInputChange('date', e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ startAdornment: <CalendarTodayIcon sx={{ mr: 1 }} /> }}
+                  />
+                  <TextField
+                    label="금액"
+                    fullWidth
+                    value={ocrResult.totalPrice.toLocaleString()}
+                    onChange={(e) => handleInputChange('totalPrice', e.target.value)}
+                    InputProps={{ startAdornment: <AttachMoneyIcon sx={{ mr: 1 }} /> }}
+                  />
+                </Stack>
+              ) : (
+                <Stack spacing={1}>
+                  <Typography>
+                    <StorefrontIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+                    <strong>상호명:</strong> {ocrResult.shopName}
+                  </Typography>
+                  <Typography>
+                    <CalendarTodayIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+                    <strong>날짜:</strong> {ocrResult.date}
+                  </Typography>
+                  <Typography>
+                    <AttachMoneyIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+                    <strong>금액:</strong> {Number(ocrResult.totalPrice).toLocaleString()}원
+                  </Typography>
+                </Stack>
+              )}
 
-            <button
-              className="w-full bg-[#4CAF50] text-white font-semibold py-2 rounded hover:bg-[#43a047]"
-              onClick={handleCreateReceipt}
-            >
-              영수증 저장
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>카테고리</InputLabel>
+                <Select
+                  value={keywordId}
+                  label="카테고리"
+                  onChange={(e) => setKeywordId(e.target.value)}
+                >
+                  {categories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-export default ReceiptUpload;
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                <Button variant="contained" fullWidth onClick={handleCreateReceipt}>
+                  영수증 저장
+                </Button>
+                <Button variant="outlined" fullWidth onClick={() => setIsEditing(!isEditing)}>
+                  {isEditing ? '수정 완료' : '영수증 수정'}
+                </Button>
+              </Stack>
+            </Box>
+          )}
+        </Stack>
+      </Box>
+    </Box>
+  )
+}
