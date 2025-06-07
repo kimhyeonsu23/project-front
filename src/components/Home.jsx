@@ -1,44 +1,74 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Box, Typography, Button, Stack } from '@mui/material'
 
-function Home() {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [userName, setUserName] = useState('');
+export default function Home() {
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [userName, setUserName] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const storedEmail = localStorage.getItem('email');
-    const storedName = localStorage.getItem('userName'); // 추가
-
+    const token = localStorage.getItem('accessToken')
+    const storedEmail = localStorage.getItem('email')
     if (!token || !storedEmail) {
-      navigate('/');
+      navigate('/')
     } else {
-      setEmail(storedEmail);
-      setUserName(storedName || ''); // userName이 없으면 빈 문자열
+      setEmail(storedEmail)
+      setUserName(localStorage.getItem('userName') || '')
     }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
-  };
+  }, [navigate])
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center font-pretendard bg-[#FFFDF7] px-4 text-center">
-      <h2 className="text-2xl sm:text-3xl font-bold text-[#5C4033] leading-relaxed">
-        환영합니다 !!!!!!!! <br />
-        {userName || email}님!
-      </h2>
-
-      <button
-        onClick={handleLogout}
-        className="mt-6 px-6 py-3 bg-[#FFDAD6] text-[#5C4033] font-semibold rounded-xl shadow text-sm sm:text-base"
+    <Box
+      component="main"
+      sx={{
+        bgcolor: '#FFFDF7',
+        pt: 6,
+        pb: 10,
+        px: 2,
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: { xs: '100%', sm: 360, md: 600, lg: 800 },
+          mx: 'auto',
+          textAlign: 'center',
+        }}
       >
-        로그아웃
-      </button>
-    </div>
-  );
-}
+        <Typography variant="h4" color="primary" gutterBottom>
+          환영합니다!<br />
+          {userName || email}님!
+        </Typography>
 
-export default Home;
+        <Stack spacing={2} mt={4}>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={() => navigate('receipt')}
+            sx={{
+              bgcolor: '#FFF1F0',
+              color: 'primary.main',
+              '&:hover': { bgcolor: '#ffeaea' },
+            }}
+          >
+            영수증 등록
+          </Button>
+
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={() => navigate('/ledger/manual')}
+            sx={{
+              bgcolor: '#E8F5E9',
+              color: 'primary.main',
+              '&:hover': { bgcolor: '#C8E6C9' },
+            }}
+          >
+            수동 가계부 입력
+          </Button>
+        </Stack>
+      </Box>
+    </Box>
+  )
+}
