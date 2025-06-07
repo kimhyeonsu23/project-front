@@ -18,11 +18,14 @@ export default function ConsentPage() {
       localStorage.setItem('accessToken', data.accessToken)
       localStorage.setItem('email', data.email)
       localStorage.setItem('userName', data.userName)
+
+      // 더 이상 필요 없는 pending 키 삭제
       localStorage.removeItem('pendingEmail')
-      localStorage.removeItem('pendingUserName')
       localStorage.removeItem('pendingLoginType')
+
       navigate('/home')
-    } catch {
+    } catch (err) {
+      console.error(err)
       alert('전환에 실패했습니다.')
     }
   }
@@ -41,7 +44,7 @@ export default function ConsentPage() {
           <strong>{email}</strong> 은 이미 가입된 이메일입니다.
         </Typography>
         <Typography>
-          카카오/구글 계정으로 전환하시겠습니까?
+          {loginType === 'KAKAO' ? '카카오' : '구글'} 계정으로 전환하시겠습니까?
         </Typography>
         <Button
           variant="contained"

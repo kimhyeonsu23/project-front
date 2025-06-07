@@ -1,36 +1,43 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Box, TextField, Button, Typography, Divider, Stack } from '@mui/material'
-import icon from '../assets/icon.png'
-import { KAKAO_AUTH_URL, GOOGLE_AUTH_URL } from '../config'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Box, TextField, Button, Typography, Divider, Stack, Link as MuiLink } from '@mui/material';
+import icon from '../assets/icon.png';
+import { KAKAO_AUTH_URL, GOOGLE_AUTH_URL } from '../config';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError]       = useState('');
+  const navigate                = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+
     if (!email || !password) {
-      setError('이메일과 비밀번호를 입력해주세요.')
-      return
+      setError('이메일과 비밀번호를 입력해주세요.');
+      return;
     }
+
     try {
       const res = await fetch('/user/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      })
-      if (!res.ok) throw new Error()
-      const { token } = await res.json()
-      localStorage.setItem('accessToken', token)
-      localStorage.setItem('email', email)
-      navigate('/home')
+      });
+
+      if (!res.ok) throw new Error();
+
+      const { userId, token } = await res.json();
+
+      localStorage.setItem('accessToken', token);
+      localStorage.setItem('email',       email);
+      localStorage.setItem('userId',      userId);
+
+      navigate('/home');
     } catch {
-      setError('로그인에 실패했습니다.')
+      setError('로그인에 실패했습니다.');
     }
-  }
+  };
 
   return (
     <Box
@@ -65,6 +72,7 @@ export default function LoginForm() {
         }}
       >
         <Stack spacing={2}>
+          {/* 이메일 입력 */}
           <TextField
             label="이메일"
             fullWidth
@@ -72,6 +80,7 @@ export default function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          {/* 비밀번호 입력 */}
           <TextField
             label="비밀번호"
             type="password"
@@ -81,12 +90,14 @@ export default function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
+          {/* 로그인 버튼 */}
           <Button type="submit" variant="contained" color="primary" size="large" fullWidth>
             로그인
           </Button>
 
           <Divider>또는</Divider>
 
+          {/* 카카오 로그인 */}
           <Button
             variant="contained"
             fullWidth
@@ -95,18 +106,36 @@ export default function LoginForm() {
           >
             카카오로 로그인
           </Button>
+
+          {/* 구글 로그인 */}
           <Button variant="outlined" fullWidth onClick={() => (window.location.href = GOOGLE_AUTH_URL)}>
             구글로 로그인
           </Button>
 
+          {/* 아이디/비밀번호 찾기 링크 */}
+          <Box display="flex" justifyContent="space-between" mt={1}>
+            <MuiLink component={Link} to="/find-id" underline="hover" variant="body2">
+              아이디 찾기
+            </MuiLink>
+            <MuiLink component={Link} to="/find-password" underline="hover" variant="body2">
+              비밀번호 찾기
+            </MuiLink>
+          </Box>
+
+          {/* 회원가입 링크 */}
           <Typography variant="body2" align="center">
             계정이 없으신가요?{' '}
-            <Link to="/signup" style={{ textDecoration: 'underline', color: (theme) => theme.palette.secondary.main }}>
+            <MuiLink
+                component={Link}
+                to="/signup"
+                underline='hover'
+                sx={{ color: 'secondary.main' }}
+            >
               회원가입
-            </Link>
+            </MuiLink>
           </Typography>
         </Stack>
       </Box>
     </Box>
-  )
+  );
 }

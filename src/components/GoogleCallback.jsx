@@ -12,10 +12,13 @@ export default function GoogleCallback() {
 
     if (code && !isCalled.current) {
       isCalled.current = true
+
       axios
         .get('/user/oauth/google', { params: { code } })
         .then((res) => {
-          const { accessToken, email, userName, requiresConsent } = res.data
+          const data = res.data
+          const { userId, accessToken, email, userName, requiresConsent } = data
+
           if (requiresConsent) {
             localStorage.setItem('pendingEmail', email)
             localStorage.setItem('pendingUserName', userName)
@@ -23,9 +26,12 @@ export default function GoogleCallback() {
             navigate('/consent')
             return
           }
+
+          localStorage.setItem('userId',     userId)
           localStorage.setItem('accessToken', accessToken)
-          localStorage.setItem('email', email)
-          localStorage.setItem('userName', userName)
+          localStorage.setItem('email',       email)
+          localStorage.setItem('userName',    userName)
+
           window.history.replaceState({}, '', window.location.pathname)
           navigate('/home')
         })

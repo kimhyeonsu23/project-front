@@ -18,11 +18,6 @@ export default function Home() {
     }
   }, [navigate])
 
-  const handleLogout = () => {
-    localStorage.clear()
-    navigate('/')
-  }
-
   return (
     <Box
       component="main"
@@ -63,14 +58,14 @@ export default function Home() {
           <Button
             variant="contained"
             fullWidth
-            onClick={handleLogout}
+            onClick={() => navigate('/ledger/manual')}
             sx={{
-              bgcolor: '#FFDAD6',
+              bgcolor: '#E8F5E9',
               color: 'primary.main',
-              '&:hover': { bgcolor: '#ffcdc0' },
+              '&:hover': { bgcolor: '#C8E6C9' },
             }}
           >
-            로그아웃
+            수동 가계부 입력
           </Button>
         </Stack>
       </Box>
