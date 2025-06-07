@@ -1,9 +1,13 @@
-import { Navigate } from 'react-router-dom';
+import React from 'react'
+import { Navigate } from 'react-router-dom'
+import { Box } from '@mui/material'
 
-function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('accessToken');
+export default function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('accessToken')
 
-  return token ? children : <Navigate to="/" replace />;
+  if (!token) {
+    return <Navigate to="/" replace />
+  }
+
+  return <Box component="div">{children}</Box>
 }
-
-export default ProtectedRoute;

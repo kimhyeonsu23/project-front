@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 :root {
   font-family: 'Pretendard', sans-serif;
   line-height: 1.5;
@@ -25,14 +26,21 @@ a:hover {
   color: #535bf2;
 }
 
+html, body, #root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  display: block;
+  min-width: 0;
+  min-height: auto;
   font-family: 'Pretendard', sans-serif;
-  overflow-x: hidden; 
+  overflow-x: hidden;
 }
 
 h1 {
@@ -71,5 +79,3 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-
-
