@@ -21,8 +21,8 @@ export default function LoginForm() {
     try {
       const res = await fetch('/user/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/json' }, // 서버에 보낼 형식이 json이라고 알려주는 http 헤더
+        body: JSON.stringify({ email, password }), // json 문자열로 변환해서 전송
       });
 
       if (!res.ok) throw new Error();
@@ -32,6 +32,9 @@ export default function LoginForm() {
       localStorage.setItem('accessToken', token);
       localStorage.setItem('email',       email);
       localStorage.setItem('userId',      userId);
+
+      console.log("로그인 토큰 : " + token);
+      console.log("로그인한 유저 아이디 : " + userId);
 
       navigate('/home');
     } catch {
