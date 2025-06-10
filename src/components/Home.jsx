@@ -74,7 +74,7 @@ export default function Home() {
         setBadge(data)
         // 뱃지 수 세기
         data.forEach((bad) => {
-          {/* 자바 스크립트에서는 배열을 반복할때 forEach나 map을 사용 */ }
+          
           if (bad.badgeId === 1) {
             setBadge1(bad.grantedDate)
           }
@@ -98,9 +98,7 @@ export default function Home() {
 
 function drawBadges() {
     return (
-      <Box display="flex" gap={6}> {/* badge1 존재할때만 jsx를 렌더링 + 간격 2
-      justifyContent="center" : 플렉스박스 레이아웃을 활성화함. 기본적으로 수평 방향 정렬이 가능하도록 함
-      이 판위에서 justifyContent = "center" 로 아이템들을 수평 가운데로 정렬함. */}
+      <Box display="flex" gap={6}> 
         {badge1 && (
           <Grid container spacing={3}>
             <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
@@ -155,19 +153,19 @@ function drawBadges() {
   }
 
 
-const fetchCurrentWeek = async () => { // async함수는 promise를 반환하는 함수, await은 promise가 완려될때까지 기다리는 키워드
+const fetchCurrentWeek = async () => {
     try {
       console.log("fetchCurrentWeek 실행");
       const token = localStorage.getItem('accessToken')
-      //const token = localStorage.getItem("token"); // 브라우저의 로컬스토리지에서 token이라는 키에 저장된 jwt 토큰값을 꺼내옴.
+      
       console.log(" fetchCurrentWeek토큰 : " + token);
 
       const response = await fetch('http://localhost:8080/statis/getReceipt/calCurrentWeek', {
         method: 'GET',
-        headers: { // 헤더에 담은 토큰 값 : authorizaition 헤더의 값은 반드시 Bearer + 토큰
+        headers: {
           'Authorization': `Bearer ${token}`,
         },
-        //credentials: 'include',   //블로그 보고 한거임.
+      
       });
 
 
@@ -187,7 +185,7 @@ const fetchCurrentWeek = async () => { // async함수는 promise를 반환하는
   const fetchKeywordTotalPrice = async () => {
     try {
       const token = localStorage.getItem('accessToken')
-      //const token = localStorage.getItem("token");
+      
       const res = await fetch('http://localhost:8080/statis/getReceipt/calKeywordTotalPrice', {
         method: 'GET',
         headers: {
@@ -261,7 +259,7 @@ const fetchCurrentWeek = async () => { // async함수는 promise를 반환하는
         <Box>
           <div className="mt-8 text-[#5C4033]">
 
-      <Grid container spacing={2} justifyContent="center" > {/* justifyContent : 수평정렬 / alignItems : 수직정렬 */}
+      <Grid container spacing={2} justifyContent="center" > 
         <Grid item xs={12} sm={6}>
           <Card sx={{ p: 4, backgroundColor: '#FFF8F0', boxShadow: 2 , font: 'primary'}}>
             <Typography variant="h6" font-semibold>💸이번주 소비 금액</Typography>
@@ -328,11 +326,11 @@ const fetchCurrentWeek = async () => { // async함수는 promise를 반환하는
     <button
     onClick={downloadChart} download
     style={{
-      padding: '5px 5px',   // 버튼 크기 (상하, 좌우 여백)
+      padding: '5px 5px',  
       backgroundColor: '#FFDAD6',
       color: 'black',
       fontSize: '14px',
-      borderRadius: '8px'   // 둥근 모서리
+      borderRadius: '8px' 
     }}> 차트 저장
     </button>
 
