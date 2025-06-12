@@ -22,6 +22,7 @@ import VerifyResetCode from './components/VerifyResetCode'
 import ResetPasswordByCode from './components/ResetPasswordByCode'
 import ConsentPage from './components/ConsentPage'
 import DailyLedger from './components/DailyLedger'
+import MyInfo from './components/MyInfo'
 
 function App() {
   return (
@@ -49,6 +50,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/mypage/info"
+              element={
+                <ProtectedRoute>
+                  <MyInfo/>
+                </ProtectedRoute>
+              }
+              />
             <Route
               path="/home"
               element={
