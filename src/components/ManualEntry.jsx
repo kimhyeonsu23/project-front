@@ -9,6 +9,16 @@ import {
   Stack,
   Paper,
 } from '@mui/material'
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import koLocale from 'date-fns/locale/ko'
+
+function formatDateToYYYYMMDD(date) {
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
 
 const categoryOptions = [
   '외식',
@@ -23,7 +33,7 @@ const categoryOptions = [
 
 export default function ManualEntry() {
   const navigate = useNavigate()
-  const [date, setDate] = useState('')
+  const [date, setDate] = useState(null)
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -53,7 +63,7 @@ export default function ManualEntry() {
     }
 
     const payload = {
-      date,
+      date: formatDateToYYYYMMDD(date), 
       shop: description.trim() || category,
       userId: parseInt(userId),
       keywordId: keywordMap[category],
@@ -114,69 +124,70 @@ export default function ManualEntry() {
           </Typography>
         )}
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            label="날짜"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            margin="normal"
-          />
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={koLocale}>
+          <Box component="form" onSubmit={handleSubmit}>
+            <DatePicker
+              label="날짜"
+              value={date}
+              onChange={(newDate) => setDate(newDate)}
+              renderInput={(params) => (
+                <TextField {...params} fullWidth margin="normal" />
+              )}
+            />
 
-          <TextField
-            select
-            label="카테고리"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            fullWidth
-            margin="normal"
-          >
-            <MenuItem value="">
-              <em>선택하세요</em>
-            </MenuItem>
-            {categoryOptions.map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                {opt}
+            <TextField
+              select
+              label="카테고리"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              fullWidth
+              margin="normal"
+            >
+              <MenuItem value="">
+                <em>선택하세요</em>
               </MenuItem>
-            ))}
-          </TextField>
+              {categoryOptions.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </TextField>
 
-          <TextField
-            label="설명 (선택)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
+            <TextField
+              label="설명 (선택)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              fullWidth
+              margin="normal"
+            />
 
-          <TextField
-            label="금액"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
+            <TextField
+              label="금액"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              fullWidth
+              margin="normal"
+            />
 
-          <Stack direction="row" spacing={2} mt={4} justifyContent="flex-end">
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/ledger')}
-              sx={{ textTransform: 'none' }}
-            >
-              취소
-            </Button>
-            <Button
-              variant="contained"
-              type="submit"
-              sx={{ textTransform: 'none' }}
-            >
-              저장
-            </Button>
-          </Stack>
-        </Box>
+            <Stack direction="row" spacing={2} mt={4} justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/ledger')}
+                sx={{ textTransform: 'none' }}
+              >
+                취소
+              </Button>
+              <Button
+                variant="contained"
+                type="submit"
+                sx={{ textTransform: 'none' }}
+              >
+                저장
+              </Button>
+            </Stack>
+          </Box>
+        </LocalizationProvider>
       </Paper>
     </Box>
   )

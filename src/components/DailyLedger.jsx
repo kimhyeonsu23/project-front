@@ -1,10 +1,54 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Snackbar, Alert, Button as MuiButton } from '@mui/material'
+import axios from 'axios'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import {
+  ShoppingCartIcon,
+  BusIcon,
+  HomeIcon,
+  ShirtIcon,
+  HeartIcon,
+  BookIcon,
+  PiggyBankIcon,
+  WalletIcon
+} from 'lucide-react'
 
 export default function DailyLedger() {
-  const { date } = useParams()          
+  const { date } = useParams()
   const navigate = useNavigate()
   const [entries, setEntries] = useState([])
+  const [itemsMap, setItemsMap] = useState({})
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [deletedEntry, setDeletedEntry] = useState(null)
+  const [deletedItems, setDeletedItems] = useState(null)
+
+  const formattedDate = new Date(date).toLocaleDateString('ko-KR', {
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  })
+
+  const categoryColors = {
+    '외식': 'bg-red-100 text-red-800',
+    '교통': 'bg-blue-100 text-blue-800',
+    '생활비': 'bg-yellow-100 text-yellow-800',
+    '쇼핑': 'bg-purple-100 text-purple-800',
+    '건강': 'bg-green-100 text-green-800',
+    '교육': 'bg-indigo-100 text-indigo-800',
+    '저축/투자': 'bg-gray-100 text-gray-800',
+    '수입': 'bg-green-100 text-green-800',
+  }
+
+  const categoryIcons = {
+    '외식': <ShoppingCartIcon className="w-4 h-4 inline-block mr-1" />,
+    '교통': <BusIcon className="w-4 h-4 inline-block mr-1" />,
+    '생활비': <HomeIcon className="w-4 h-4 inline-block mr-1" />,
+    '쇼핑': <ShirtIcon className="w-4 h-4 inline-block mr-1" />,
+    '건강': <HeartIcon className="w-4 h-4 inline-block mr-1" />,
+    '교육': <BookIcon className="w-4 h-4 inline-block mr-1" />,
+    '저축/투자': <PiggyBankIcon className="w-4 h-4 inline-block mr-1" />,
+    '수입': <WalletIcon className="w-4 h-4 inline-block mr-1" />,
+  }
 
   useEffect(() => {
     async function fetchDaily() {
@@ -20,109 +64,212 @@ export default function DailyLedger() {
 
         const data = await res.json()
         const todays = data
-          .filter(item => item.date === date)          
+          .filter(item => item.date === date && !item.isDeleted)
           .map(item => ({
             id: item.receiptId,
             category: catMap[item.keywordId] || '기타',
             description: item.shop,
             amount: item.totalPrice,
             isIncome: item.keywordId === 8,
-            imagePath: item.imagePath                
+            imagePath: item.imagePath,
+            date: item.date
           }))
 
         setEntries(todays)
+
+        const itemsResponses = await Promise.all(
+          todays.map(e =>
+            fetch(`/receipt/${e.id}/items`)
+              .then(res => res.ok ? res.json() : [])
+              .catch(() => [])
+          )
+        )
+        const newItemsMap = {}
+        todays.forEach((entry, idx) => {
+          newItemsMap[entry.id] = itemsResponses[idx]
+        })
+        setItemsMap(newItemsMap)
       } catch (err) {
         console.error('상세 내역 로딩 오류:', err)
       }
     }
+
     fetchDaily()
   }, [date])
 
-  
   const handleDelete = async (receiptId) => {
-  if (!window.confirm('정말 삭제할까요?')) return;
-
-  try {
-    const res = await fetch(
-      `/receipt/${encodeURIComponent(receiptId)}`,
-      { method: 'DELETE' }
-    );
-
-    if (!res.ok) {
-      throw new Error(`삭제 실패: ${res.status}`);
+    if (!window.confirm('정말 삭제하시겠습니까?')) return
+    const entryToDelete = entries.find(e => e.id === receiptId)
+    const itemsToDelete = itemsMap[receiptId]
+    try {
+      await axios.patch(`/receipt/${receiptId}/delete`, {}, { withCredentials: true })
+      setDeletedEntry(entryToDelete)
+      setDeletedItems(itemsToDelete)
+      setEntries(prev => prev.filter(e => e.id !== receiptId))
+      setItemsMap(prev => {
+        const updated = { ...prev }
+        delete updated[receiptId]
+        return updated
+      })
+      setSnackbarOpen(true)
+    } catch (err) {
+      alert('삭제 실패: ' + err.message)
     }
-
-    setEntries(prev => prev.filter(e => e.id !== receiptId));
-  } catch (err) {
-    alert(err.message);
-    console.error(err);
   }
-};
 
-  const color = {
-    '외식':'bg-red-100 text-red-800', '교통':'bg-blue-100 text-blue-800',
-    '생활비':'bg-yellow-100 text-yellow-800','쇼핑':'bg-purple-100 text-purple-800',
-    '건강':'bg-green-100 text-green-800','교육':'bg-indigo-100 text-indigo-800',
-    '저축/투자':'bg-gray-100 text-gray-800','수입':'bg-green-100 text-green-800'
+  const handleUndo = async () => {
+    if (!deletedEntry) return
+    try {
+      await axios.patch(`/receipt/${deletedEntry.id}/restore`, {}, { withCredentials: true })
+      const updated = [...entries, deletedEntry].sort((a, b) => new Date(a.date) - new Date(b.date))
+      setEntries(updated)
+      if (!deletedItems || deletedItems.length === 0) {
+        const res = await axios.get(`/receipt/${deletedEntry.id}/items`)
+        setItemsMap(prev => ({ ...prev, [deletedEntry.id]: res.data }))
+      } else {
+        setItemsMap(prev => ({ ...prev, [deletedEntry.id]: deletedItems }))
+      }
+      setDeletedEntry(null)
+      setDeletedItems(null)
+      setSnackbarOpen(false)
+    } catch (err) {
+      alert('되돌리기 실패: ' + err.message)
+    }
+  }
+
+  const incomeTotal = entries.filter(e => e.isIncome).reduce((sum, e) => sum + e.amount, 0)
+  const expenseTotal = entries.filter(e => !e.isIncome).reduce((sum, e) => sum + Math.abs(e.amount), 0)
+  const balance = incomeTotal - expenseTotal
+
+  const downloadCSV = () => {
+    let csv = `카테고리,상호,금액,날짜\n`
+    entries.forEach(e => {
+      const safeDate = `="${e.date}"`
+      csv += `${e.category},${e.description},${e.amount},${safeDate}\n`
+      if (itemsMap[e.id]) {
+        itemsMap[e.id].forEach(item => {
+          csv += `,,${item.itemName} (${item.quantity}x${item.unitPrice}) = ${item.totalPrice},\n`
+        })
+      }
+    })
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${date}_가계부.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const downloadPDF = async () => {
+    const element = document.getElementById('ledger-pdf')
+    const canvas = await html2canvas(element)
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const width = pdf.internal.pageSize.getWidth()
+    const height = (canvas.height * width) / canvas.width
+    pdf.addImage(imgData, 'PNG', 0, 0, width, height)
+    pdf.save(`${date}_가계부.pdf`)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-800">{date} 상세 내역</h2>
-          <button
-            onClick={() => navigate(-1)}
-            className="text-sm text-blue-500 hover:underline"
-          >
-            ← 돌아가기
-          </button>
+    <div className="min-h-screen bg-[#fffdf7] p-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-extrabold text-[#444]">📒 {formattedDate} 가계부</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate('/ledger')}
+              className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded shadow hover:bg-gray-200"
+            >
+              ← 돌아가기
+            </button>
+            <button onClick={downloadCSV} className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded shadow">CSV 저장</button>
+            <button onClick={downloadPDF} className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded shadow">PDF 저장</button>
+          </div>
         </div>
 
-        <ul className="space-y-4">
-          {entries.map(e => (
-            <li
-              key={e.id}
-              className="flex items-center justify-between bg-white shadow rounded-lg p-4"
-            >
-              <div className="flex items-center space-x-3">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${color[e.category] || 'bg-gray-100 text-gray-800'}`}>
-                  {e.category}
-                </span>
-                <span className="text-sm text-gray-700">{e.description}</span>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                {e.imagePath && (
-                  <a
-                     href={`/receipt/image/${encodeURIComponent(e.imagePath)}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-xs text-blue-600 hover:underline"
-                   >
-                      영수증 보기
-                   </a>
+        <div id="ledger-pdf" className="bg-white px-6 py-4 rounded-lg shadow space-y-4 border border-gray-200">
+          {entries.length === 0 ? (
+            <div className="text-center text-gray-400 py-10">내역이 없습니다 🐣</div>
+          ) : (
+            entries.map(e => (
+              <div
+                key={e.id}
+                className={`border-l-4 rounded p-4 shadow-sm ${e.isIncome ? 'border-green-400' : 'border-red-400'} bg-white`}
+              >
+                <div className="flex justify-between items-center text-sm text-gray-800">
+                  <div>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center ${
+                      categoryColors[e.category] || 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {categoryIcons[e.category]}{e.category}
+                    </span>{' '}
+                    <span className="font-medium ml-2">{e.description}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`font-bold ${e.isIncome ? 'text-green-600' : 'text-red-600'}`}>
+                      {e.isIncome ? '+' : '-'}₩{Math.abs(e.amount).toLocaleString()}
+                    </div>
+                    <button onClick={() => handleDelete(e.id)} className="text-xs text-red-500 hover:underline">삭제</button>
+                  </div>
+                </div>
+                {itemsMap[e.id]?.length > 0 && (
+                  <table className="w-full text-xs mt-2 border border-gray-300 rounded">
+                    <thead className="bg-gray-100 text-gray-600">
+                      <tr>
+                        <th className="px-2 py-1 border">상품명</th>
+                        <th className="px-2 py-1 border">단가</th>
+                        <th className="px-2 py-1 border">수량</th>
+                        <th className="px-2 py-1 border">금액</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itemsMap[e.id].map((item, idx) => (
+                        <tr key={idx} className="text-gray-700">
+                          <td className="px-2 py-1 border">{item.itemName}</td>
+                          <td className="px-2 py-1 border text-right">{item.unitPrice?.toLocaleString()}원</td>
+                          <td className="px-2 py-1 border text-center">{item.quantity}</td>
+                          <td className="px-2 py-1 border text-right">{item.totalPrice.toLocaleString()}원</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
-
-                <button
-                  onClick={() => handleDelete(e.id)}
-                  className="text-xs text-red-500 hover:underline"
-                >
-                  삭제
-                </button>
-                
-                <span
-                  className={`text-sm font-medium ${
-                    e.isIncome ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  {e.isIncome ? '+' : '-'}₩{Math.abs(e.amount).toLocaleString()}
-                </span>
+                {e.imagePath && (
+                  <img
+                    src={`/receipt/image/${encodeURIComponent(e.imagePath)}`}
+                    alt="영수증 원본"
+                    className="mt-2 w-48 border rounded shadow"
+                  />
+                )}
               </div>
-            </li>
-          ))}
-        </ul>
+            ))
+          )}
+          {entries.length > 0 && (
+            <div className="pt-6 text-sm text-gray-700 space-y-1 border-t border-dashed">
+              <div>총 수입: <span className="text-green-600 font-bold">₩{incomeTotal.toLocaleString()}</span></div>
+              <div>총 지출: <span className="text-red-600 font-bold">₩{expenseTotal.toLocaleString()}</span></div>
+              <div>잔액: <span className={`font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>₩{balance.toLocaleString()}</span></div>
+            </div>
+          )}
+        </div>
       </div>
+
+      <Snackbar open={snackbarOpen} autoHideDuration={5000} onClose={() => setSnackbarOpen(false)}>
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="info"
+          sx={{ width: '100%' }}
+          action={
+            <MuiButton color="inherit" size="small" onClick={handleUndo}>
+              되돌리기
+            </MuiButton>
+          }
+        >
+          영수증이 삭제되었습니다.
+        </Alert>
+      </Snackbar>
     </div>
   )
 }
