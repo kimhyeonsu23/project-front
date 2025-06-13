@@ -2,8 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Snackbar, Alert, Button as MuiButton } from '@mui/material'
 import axios from 'axios'
+
 import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import html2canvas from 'html2canvas'
+
+import NotoSansKR from '../assets/fonts/NotoSansKR.js'
+
 import {
   ShoppingCartIcon,
   BusIcon,
@@ -12,10 +17,7 @@ import {
   HeartIcon,
   BookIcon,
   PiggyBankIcon,
-  WalletIcon,
-  ReceiptIcon,
-  Trash2Icon,
-  DownloadIcon
+  WalletIcon
 } from 'lucide-react'
 
 export default function DailyLedger() {
@@ -141,40 +143,118 @@ export default function DailyLedger() {
     }
   }
 
-  const incomeTotal = entries.filter(e => e.isIncome).reduce((sum, e) => sum + e.amount, 0)
-  const expenseTotal = entries.filter(e => !e.isIncome).reduce((sum, e) => sum + Math.abs(e.amount), 0)
-  const balance = incomeTotal - expenseTotal
-
   const downloadCSV = () => {
-    let csv = `카테고리,상호,금액,날짜\n`
-    entries.forEach(e => {
-      const safeDate = `="${e.date}"`
-      csv += `${e.category},${e.description},${e.amount},${safeDate}\n`
-      if (itemsMap[e.id]) {
-        itemsMap[e.id].forEach(item => {
-          csv += `,,${item.itemName} (${item.quantity}x${item.unitPrice}) = ${item.totalPrice},\n`
-        })
-      }
-    })
-    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${date}_가계부.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+  const rows = [['카테고리', '상호', '금액', '날짜']];
+
+  entries.forEach(e => {
+    const safeDate = `="${e.date}"`;
+
+    //  수입/지출 항목 한 줄
+    rows.push([e.category, e.description, e.amount, safeDate]);
+
+    //  상품정보가 있으면 바로 아래에 출력
+    if (itemsMap[e.id] && itemsMap[e.id].length > 0) {
+      rows.push(['', '상품명', '단가', '수량', '총액']);
+      itemsMap[e.id].forEach(item => {
+        rows.push([
+          '',
+          item.itemName,
+          item.unitPrice,
+          item.quantity,
+          item.totalPrice
+        ]);
+      });
+    }
+
+    //  항목 구분을 위한 빈 줄
+    rows.push([]);
+  });
+
+
+  const csvContent = "\uFEFF" + rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${date}_가계부.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+
+  const expenseTotal = entries.filter(e => !e.isIncome).reduce((sum, e) => sum + Math.abs(e.amount), 0)
 
   const downloadPDF = async () => {
-    const element = document.getElementById('ledger-pdf')
-    const canvas = await html2canvas(element)
-    const imgData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF('p', 'mm', 'a4')
-    const width = pdf.internal.pageSize.getWidth()
-    const height = (canvas.height * width) / canvas.width
-    pdf.addImage(imgData, 'PNG', 0, 0, width, height)
-    pdf.save(`${date}_가계부.pdf`)
+  const doc = new jsPDF()
+
+  doc.addFileToVFS('NotoSansKR.ttf', NotoSansKR)
+  doc.addFont('NotoSansKR.ttf', 'NotoSansKR', 'normal')
+  doc.setFont('NotoSansKR')
+  doc.setFontSize(18)
+  doc.text(`${formattedDate} 가계부`, 14, 22)
+
+  let currentY = 30
+
+  for (const entry of entries) {
+    const tableBody = []
+
+    tableBody.push([entry.category, entry.description, (entry.isIncome ? '+' : '-') + Math.abs(entry.amount).toLocaleString(), '', '', ''])
+
+    if (itemsMap[entry.id]?.length > 0) {
+      tableBody.push(['', '상품명', '', '단가', '수량', '합계'])
+      itemsMap[entry.id].forEach(item => {
+        tableBody.push(['', item.itemName, '', `${item.unitPrice || ''}`, `${item.quantity}`, `${item.totalPrice}`])
+      })
+    }
+
+    autoTable(doc, {
+      startY: currentY,
+      body: tableBody,
+      showHead: 'never',
+      styles: {
+        font: 'NotoSansKR',
+        fontSize: 10
+      }
+    })
+
+    currentY = doc.lastAutoTable.finalY + 5
+
+    if (entry.imagePath) {
+      try {
+        const res = await fetch(`/receipt/image/${encodeURIComponent(entry.imagePath)}`)
+        const blob = await res.blob()
+        const reader = new FileReader()
+
+        await new Promise((resolve) => {
+          reader.onloadend = () => {
+            const imageData = reader.result
+            const imageWidth = 60
+            const imageHeight = 80
+            if (currentY + imageHeight > 280) {
+              doc.addPage()
+              currentY = 20
+            }
+            doc.addImage(imageData, 'JPEG', 14, currentY, imageWidth, imageHeight)
+            currentY += imageHeight + 10
+            resolve()
+          }
+          reader.readAsDataURL(blob)
+        })
+      } catch (err) {
+        console.error('이미지 삽입 실패:', err)
+      }
+    }
+
+    if (currentY > 270) {
+      doc.addPage()
+      currentY = 20
+    }
   }
+
+  doc.setFontSize(12)
+  doc.text(`총 지출: ${expenseTotal.toLocaleString()}`, 14, currentY)
+  doc.save(`${date}_가계부.pdf`)
+}
 
   return (
     <div className="min-h-screen bg-[#fffdf7] p-6">
@@ -188,8 +268,8 @@ export default function DailyLedger() {
             >
               ← 돌아가기
             </button>
-            <button onClick={downloadCSV} className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded shadow">CSV 저장</button>
             <button onClick={downloadPDF} className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded shadow">PDF 저장</button>
+            <button onClick={downloadCSV} className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded shadow">CSV 저장</button>
           </div>
         </div>
 
@@ -251,10 +331,8 @@ export default function DailyLedger() {
             ))
           )}
           {entries.length > 0 && (
-            <div className="pt-6 text-sm text-gray-700 space-y-1 border-t border-dashed">
-              <div>총 수입: <span className="text-green-600 font-bold">₩{incomeTotal.toLocaleString()}</span></div>
+            <div className="pt-6 text-sm text-gray-700 border-t border-dashed">
               <div>총 지출: <span className="text-red-600 font-bold">₩{expenseTotal.toLocaleString()}</span></div>
-              <div>잔액: <span className={`font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>₩{balance.toLocaleString()}</span></div>
             </div>
           )}
         </div>

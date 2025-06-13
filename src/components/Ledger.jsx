@@ -82,6 +82,13 @@ export default function Ledger() {
     })
     .reduce((sum, e) => sum + Math.abs(e.amount), 0)
 
+  const thisMonthIncome = entries
+    .filter(e => {
+      const [y, m] = e.date.split('-').map(Number)
+      return e.isIncome && y === today.getFullYear() && m === today.getMonth() + 1
+    })
+    .reduce((sum, e) => sum + Math.abs(e.amount), 0)
+
   const categoryColors = {
     '외식': 'bg-red-100 text-red-800',
     '교통': 'bg-blue-100 text-blue-800',
@@ -96,9 +103,10 @@ export default function Ledger() {
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <SummaryCard title="이번 주 지출" amount={thisWeekTotal} />
           <SummaryCard title="이번 달 지출" amount={thisMonthTotal} />
+          <SummaryCard title="이번 달 수입" amount={thisMonthIncome} income />
         </div>
 
         <div className="flex items-center justify-between border-b pb-3">
@@ -112,7 +120,11 @@ export default function Ledger() {
         </div>
 
         {Object.keys(groupedEntries).sort((a, b) => b.localeCompare(a)).map(date => {
-          const dateTotal = groupedEntries[date]
+          const income = groupedEntries[date]
+            .filter(e => e.isIncome)
+            .reduce((sum, e) => sum + e.amount, 0)
+
+          const expense = groupedEntries[date]
             .filter(e => !e.isIncome)
             .reduce((sum, e) => sum + Math.abs(e.amount), 0)
 
@@ -125,9 +137,18 @@ export default function Ledger() {
                 >
                   {date}
                 </Link>
-                <span className="text-lg font-medium text-red-600">
-                  ₩{dateTotal.toLocaleString()}
-                </span>
+                <div className="flex flex-col text-sm items-end">
+                  {income > 0 && (
+                    <span className="text-green-600 font-semibold">
+                      +₩{income.toLocaleString()}
+                    </span>
+                  )}
+                  {expense > 0 && (
+                    <span className="text-red-600 font-semibold">
+                      -₩{expense.toLocaleString()}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <ul className="divide-y">
@@ -159,12 +180,12 @@ export default function Ledger() {
   )
 }
 
-function SummaryCard({ title, amount }) {
+function SummaryCard({ title, amount, income }) {
   return (
     <div className="bg-gray-100 rounded-lg p-4 shadow-inner">
       <p className="text-sm text-gray-600">{title}</p>
-      <p className="mt-2 text-2xl font-semibold text-red-600">
-        ₩{amount.toLocaleString()}
+      <p className={`mt-2 text-2xl font-semibold ${income ? 'text-green-600' : 'text-red-600'}`}>
+        {income ? '+' : '-'}₩{amount.toLocaleString()}
       </p>
     </div>
   )
