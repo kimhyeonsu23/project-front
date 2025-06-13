@@ -12,7 +12,10 @@ import {
   HeartIcon,
   BookIcon,
   PiggyBankIcon,
-  WalletIcon
+  WalletIcon,
+  ReceiptIcon,
+  Trash2Icon,
+  DownloadIcon
 } from 'lucide-react'
 
 export default function DailyLedger() {
@@ -29,14 +32,15 @@ export default function DailyLedger() {
   })
 
   const categoryColors = {
-    '외식': 'bg-red-100 text-red-800',
+    '외식': 'bg-pink-100 text-pink-800',
     '교통': 'bg-blue-100 text-blue-800',
     '생활비': 'bg-yellow-100 text-yellow-800',
     '쇼핑': 'bg-purple-100 text-purple-800',
     '건강': 'bg-green-100 text-green-800',
     '교육': 'bg-indigo-100 text-indigo-800',
     '저축/투자': 'bg-gray-100 text-gray-800',
-    '수입': 'bg-green-100 text-green-800',
+    '수입': 'bg-emerald-100 text-emerald-800',
+    '기타': 'bg-slate-100 text-slate-800'
   }
 
   const categoryIcons = {
@@ -47,7 +51,7 @@ export default function DailyLedger() {
     '건강': <HeartIcon className="w-4 h-4 inline-block mr-1" />,
     '교육': <BookIcon className="w-4 h-4 inline-block mr-1" />,
     '저축/투자': <PiggyBankIcon className="w-4 h-4 inline-block mr-1" />,
-    '수입': <WalletIcon className="w-4 h-4 inline-block mr-1" />,
+    '수입': <WalletIcon className="w-4 h-4 inline-block mr-1" />
   }
 
   useEffect(() => {

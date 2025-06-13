@@ -27,7 +27,66 @@ export default function MyPage() {
     navigate('/')
   }
 
+
+function drawBadges() {
+    return (
+      <Box display="flex" gap={6}> 
+        {badge1 && (
+          <Grid container spacing={3}>
+            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
+          <Box>
+
+            <Box
+              component="img"
+              src="/badge1.png"
+              alt="절약초보 뱃지"
+              sx={{ width: 130, height: 130 }}
+
+            />
+            <Typography>발급일 : {badge1}</Typography>
+          </Box>
+          </Card>
+          </Grid>
+        )}
+        {badge2 && (
+          <Grid container spacing={3}>
+          <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
+          <Box>
+
+            <Box
+              component="img"
+              src="/badge2.png"
+              alt="절약고수 뱃지"
+              sx={{ width: 130, height: 130 }}
+            />
+            <Typography>발급일 : {badge2}</Typography>
+          </Box>
+          </Card>
+          </Grid>
+        )}
+        {badge3 && (
+          <Grid container spacing = {3}>
+            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
+          <Box>
+
+            <Box
+              component="img"
+              src="/badge3.png"
+              alt="절약왕 뱃지"
+              sx={{ width: 130, height: 130 }}
+            />
+            <Typography>발급일 : {badge3}</Typography>
+          </Box>
+          </Card>
+          </Grid>
+        )}
+      </Box>
+    );
+  }
+
+
   return (
+   
     <Box
       component="main"
       display="flex"

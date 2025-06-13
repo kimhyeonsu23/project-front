@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Box, Typography, Button, Stack, Card, Grid } from '@mui/material'
 import html2canvas from 'html2canvas';
+import { Divider } from '@mui/material'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -16,32 +17,28 @@ export default function Home() {
   const [healthExpense, setHealthExpense] = useState(0);
   const [investmentExpense, setInvestmentExpense] = useState(0);
   const [transportationExpense, setTransportationExpense] = useState(0);
+  const [educationExpense, setEducationExpense] = useState(0);
 
   const data = [
     { name: '외식', value: foodExpense , img:'🍔'},
-    { name: '생필품/생활비', value: livingExpense , img:'🛒'},
-    { name: '패션/미용/의류', value: fashionExpense , img:'👕'},
-    { name: '건강/병원비', value: healthExpense , img:'🏥'},
+    { name: '생활비', value: livingExpense , img:'🛒'},
+    { name: '쇼핑', value: fashionExpense , img:'👕'},
+    { name: '건강', value: healthExpense , img:'🏥'},
     { name: '저축/투자', value: investmentExpense , img:'💴'},
+    { name: '교육', value: educationExpense , img:'✏️'},
     { name: '교통', value: transportationExpense , img:'🚍'},
   ];
 
   const filteredData = data.filter(d => d.value > 0);
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#F13342', '#FA8042', '#BB8042'];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#ed87d2', '#FA8042', '#F13342', '#b86bd6'];
   const RADIAN = Math.PI / 180;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [badge, setBadge] = useState([]);
-  const [badge1, setBadge1] = useState(""); // 절약초보 뱃지 : 받은 날짜를 ""으로 초기화
-  const [badge2, setBadge2] = useState(""); // 절약고수 뱃지
-  const [badge3, setBadge3] = useState(""); // 절약왕 뱃지
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken')
     const storedEmail = localStorage.getItem('email')
     const userId = localStorage.getItem('userId'); //** 
 
-    fetchGetBadge();
 
     if (!token || !storedEmail) {
       navigate('/')
@@ -54,103 +51,7 @@ export default function Home() {
   }, [navigate])
 
 
-  const fetchGetBadge = async () => {
-    try {
-      const token = localStorage.getItem('accessToken')
-      console.log("token : ", token);
-      const response = await fetch('http://localhost:8080/history/getGrantedDate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-      });
-
-      if (response.ok) {
-       
-        const data = await response.json();
-        
-        console.log("데이터 : ", data);
-        setBadge(data)
-        // 뱃지 수 세기
-        data.forEach((bad) => {
-          
-          if (bad.badgeId === 1) {
-            setBadge1(bad.grantedDate)
-          }
-          if (bad.badgeId === 2) {
-            setBadge2(bad.grantedDate)
-          }
-          if (bad.badgeId === 3) {
-            setBadge3(bad.grantedDate);
-          }
-        });
-
-      }
-
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-function drawBadges() {
-    return (
-      <Box display="flex" gap={6}> 
-        {badge1 && (
-          <Grid container spacing={3}>
-            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
-
-            <Box
-              component="img"
-              src="/badge1.png"
-              alt="절약초보 뱃지"
-              sx={{ width: 130, height: 130 }}
-
-            />
-            <Typography>발급일 : {badge1}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-        {badge2 && (
-          <Grid container spacing={3}>
-          <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
-
-            <Box
-              component="img"
-              src="/badge2.png"
-              alt="절약고수 뱃지"
-              sx={{ width: 130, height: 130 }}
-            />
-            <Typography>발급일 : {badge2}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-        {badge3 && (
-          <Grid container spacing = {3}>
-            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
-
-            <Box
-              component="img"
-              src="/badge3.png"
-              alt="절약왕 뱃지"
-              sx={{ width: 130, height: 130 }}
-            />
-            <Typography>발급일 : {badge3}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-      </Box>
-    );
-  }
+  
 
 
 const fetchCurrentWeek = async () => {
@@ -201,6 +102,7 @@ const fetchCurrentWeek = async () => {
         setHealthExpense(totalPrice.health || 0);
         setInvestmentExpense(totalPrice.investment || 0);
         setTransportationExpense(totalPrice.transportation || 0);
+        setEducationExpense(totalPrice.education||0);
       } else {
         console.error("프론트 : keyword별 합계 응답 실패.");
       }
@@ -209,16 +111,18 @@ const fetchCurrentWeek = async () => {
     }
   };
 
-  const downloadChart = () => {
-    const chartElement = document.getElementById('myPieChart'); 
 
-    html2canvas(chartElement).then(canvas => {
-      const link = document.createElement('a'); 
-      link.download = 'pie_chart.png';
-      link.click();
-    })
-    
-  }
+
+  const downloadChart = () => {
+  const chartElement = document.getElementById('myPieChart');
+  html2canvas(chartElement).then(canvas => {
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = 'week_pie_chart.png';
+    link.click();
+  });
+};
+
 
 
 
@@ -244,6 +148,7 @@ const fetchCurrentWeek = async () => {
           환영합니다!<br />
           {userName || email}님!
         </Typography>
+        <Divider sx={{ width: '100%', maxWidth: { xs: '100%', sm: 360, md: 600 }, mx: 'auto', mb: 2 }} />
 
        
 </Box>
@@ -255,7 +160,6 @@ const fetchCurrentWeek = async () => {
       minHeight="60vh"
       px={2}
     >
-      {drawBadges()}
         <Box>
           <div className="mt-8 text-[#5C4033]">
 
@@ -276,6 +180,7 @@ const fetchCurrentWeek = async () => {
             <Typography variant="body2">🏥건강: {healthExpense.toLocaleString()} 원</Typography>
             <Typography variant="body2">💴저축/투자: {investmentExpense.toLocaleString()} 원</Typography>
             <Typography variant="body2">🚍교통: {transportationExpense.toLocaleString()} 원</Typography>
+            <Typography variant="body2">✏️교육: {educationExpense.toLocaleString()} 원</Typography>
           </Card>
         </Grid>
       </Grid>
@@ -351,6 +256,7 @@ const fetchCurrentWeek = async () => {
       <Typography variant="body2">🏥: {healthExpense.toLocaleString()} 원</Typography>
       <Typography variant="body2">💴: {investmentExpense.toLocaleString()} 원</Typography>
       <Typography variant="body2">🚍: {transportationExpense.toLocaleString()} 원</Typography>
+      <Typography variant="body2">✏️: {educationExpense.toLocaleString()} 원</Typography>
     </Card>
   </Card>
 </Box>
