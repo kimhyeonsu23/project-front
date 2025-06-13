@@ -184,7 +184,7 @@ export default function DailyLedger() {
 
   const expenseTotal = entries.filter(e => !e.isIncome).reduce((sum, e) => sum + Math.abs(e.amount), 0)
 
-  const downloadPDF = async () => {
+  const downloadPDF = () => {
   const doc = new jsPDF()
 
   doc.addFileToVFS('NotoSansKR.ttf', NotoSansKR)
@@ -193,68 +193,48 @@ export default function DailyLedger() {
   doc.setFontSize(18)
   doc.text(`${formattedDate} 가계부`, 14, 22)
 
-  let currentY = 30
+  const tableBody = []
 
-  for (const entry of entries) {
-    const tableBody = []
+  tableBody.push(['카테고리', '상세 내용', '금액', '단가', '수량', '합계'])
 
-    tableBody.push([entry.category, entry.description, (entry.isIncome ? '+' : '-') + Math.abs(entry.amount).toLocaleString(), '', '', ''])
+  entries.forEach(entry => {
+    tableBody.push([
+      entry.category,
+      entry.description,
+      (entry.isIncome ? '+' : '-') + Math.abs(entry.amount).toLocaleString(),
+      '', '', ''
+    ])
 
     if (itemsMap[entry.id]?.length > 0) {
       tableBody.push(['', '상품명', '', '단가', '수량', '합계'])
       itemsMap[entry.id].forEach(item => {
-        tableBody.push(['', item.itemName, '', `${item.unitPrice || ''}`, `${item.quantity}`, `${item.totalPrice}`])
+        tableBody.push([
+          '', item.itemName,
+          '', `${item.unitPrice?.toLocaleString() || ''}`,
+          `${item.quantity}`, `${item.totalPrice.toLocaleString()}`
+        ])
       })
     }
+  })
 
-    autoTable(doc, {
-      startY: currentY,
-      body: tableBody,
-      showHead: 'never',
-      styles: {
-        font: 'NotoSansKR',
-        fontSize: 10
-      }
-    })
-
-    currentY = doc.lastAutoTable.finalY + 5
-
-    if (entry.imagePath) {
-      try {
-        const res = await fetch(`/receipt/image/${encodeURIComponent(entry.imagePath)}`)
-        const blob = await res.blob()
-        const reader = new FileReader()
-
-        await new Promise((resolve) => {
-          reader.onloadend = () => {
-            const imageData = reader.result
-            const imageWidth = 60
-            const imageHeight = 80
-            if (currentY + imageHeight > 280) {
-              doc.addPage()
-              currentY = 20
-            }
-            doc.addImage(imageData, 'JPEG', 14, currentY, imageWidth, imageHeight)
-            currentY += imageHeight + 10
-            resolve()
-          }
-          reader.readAsDataURL(blob)
-        })
-      } catch (err) {
-        console.error('이미지 삽입 실패:', err)
-      }
+  autoTable(doc, {
+    body: tableBody,
+    startY: 30,
+    showHead: 'never', 
+    styles: {
+      font: 'NotoSansKR',
+      fontSize: 10
+    },
+    bodyStyles: {
+      font: 'NotoSansKR'
     }
-
-    if (currentY > 270) {
-      doc.addPage()
-      currentY = 20
-    }
-  }
+  })
 
   doc.setFontSize(12)
-  doc.text(`총 지출: ${expenseTotal.toLocaleString()}`, 14, currentY)
+  doc.text(`총 지출: ${expenseTotal.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 10)
   doc.save(`${date}_가계부.pdf`)
 }
+
 
   return (
     <div className="min-h-screen bg-[#fffdf7] p-6">
