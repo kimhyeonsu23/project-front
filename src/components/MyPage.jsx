@@ -1,21 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Box,
-  Typography,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  Avatar,
-  Stack,
-} from '@mui/material'
-import PersonIcon from '@mui/icons-material/Person'
-import HistoryIcon from '@mui/icons-material/History'
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import EditIcon from '@mui/icons-material/Edit'
-import LogoutIcon from '@mui/icons-material/Logout'
+import { LogOut, User, History, Edit, Trophy } from 'lucide-react'
 
 export default function MyPage() {
   const navigate = useNavigate()
@@ -27,132 +12,36 @@ export default function MyPage() {
     navigate('/')
   }
 
-
-function drawBadges() {
-    return (
-      <Box display="flex" gap={6}> 
-        {badge1 && (
-          <Grid container spacing={3}>
-            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
-
-            <Box
-              component="img"
-              src="/badge1.png"
-              alt="절약초보 뱃지"
-              sx={{ width: 130, height: 130 }}
-
-            />
-            <Typography>발급일 : {badge1}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-        {badge2 && (
-          <Grid container spacing={3}>
-          <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
-
-            <Box
-              component="img"
-              src="/badge2.png"
-              alt="절약고수 뱃지"
-              sx={{ width: 130, height: 130 }}
-            />
-            <Typography>발급일 : {badge2}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-        {badge3 && (
-          <Grid container spacing = {3}>
-            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
-
-            <Box
-              component="img"
-              src="/badge3.png"
-              alt="절약왕 뱃지"
-              sx={{ width: 130, height: 130 }}
-            />
-            <Typography>발급일 : {badge3}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-      </Box>
-    );
-  }
-
+  const navItems = [
+    { icon: <User className="w-5 h-5" />, label: '내 정보 보기', path: '/mypage/info' },
+    { icon: <History className="w-5 h-5" />, label: '내 소비 내역', path: '/mypage/history' },
+    { icon: <Trophy className="w-5 h-5" />, label: '챌린지', path: '/mypage/challenges' },
+    { icon: <Edit className="w-5 h-5" />, label: '프로필 수정', path: '/mypage/edit' },
+    { icon: <LogOut className="w-5 h-5" />, label: '로그아웃', onClick: handleLogout },
+  ]
 
   return (
-   
-    <Box
-      component="main"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      sx={{
-        minHeight: '100vh',
-        pt: 4,
-        pb: 10,            
-        px: 2,
-        bgcolor: 'background.default',
-      }}
-    >
-      
-      <Stack spacing={1} alignItems="center" sx={{ mb: 3 }}>
-        <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
+    <main className="min-h-screen bg-white px-4 pt-6 pb-16 flex flex-col items-center">
+      <div className="flex flex-col items-center space-y-2 mb-6">
+        <div className="w-16 h-16 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xl font-bold">
           {userName.charAt(0) || 'U'}
-        </Avatar>
-        <Typography variant="h6">{userName || '이름 없음'}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {email}
-        </Typography>
-      </Stack>
+        </div>
+        <p className="text-lg font-semibold text-gray-800">{userName || '이름 없음'}</p>
+        <p className="text-sm text-gray-500">{email}</p>
+      </div>
 
-      <Divider sx={{ width: '100%', maxWidth: { xs: '100%', sm: 360, md: 600 }, mx: 'auto', mb: 2 }} />
-
-    
-      <Box sx={{ width: '100%', maxWidth: { xs: '100%', sm: 360, md: 600 }, mx: 'auto' }}>
-        <List component="nav">
-          
-          <ListItemButton onClick={() => navigate('/mypage/info')}>
-            <ListItemIcon>
-              <PersonIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="내 정보 보기" />
-          </ListItemButton>
-
-          <ListItemButton onClick={() => navigate('/mypage/history')}>
-            <ListItemIcon>
-              <HistoryIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="내 소비 내역" />
-          </ListItemButton>
-
-          <ListItemButton onClick={() => navigate('/mypage/challenges')}>
-            <ListItemIcon>
-              <EmojiEventsIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="챌린지 기록" />
-          </ListItemButton>
-
-          <ListItemButton onClick={() => navigate('/mypage/edit')}>
-            <ListItemIcon>
-              <EditIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="프로필 수정" />
-          </ListItemButton>
-
-          <ListItemButton onClick={handleLogout}>
-            <ListItemIcon>
-              <LogoutIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="로그아웃" />
-          </ListItemButton>
-        </List>
-      </Box>
-    </Box>
+      <div className="w-full max-w-md space-y-2">
+        {navItems.map((item, idx) => (
+          <button
+            key={idx}
+            onClick={() => item.onClick ? item.onClick() : navigate(item.path)}
+            className="w-full flex items-center gap-3 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg shadow-sm text-left"
+          >
+            {item.icon}
+            <span className="text-sm font-medium text-gray-800">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </main>
   )
 }

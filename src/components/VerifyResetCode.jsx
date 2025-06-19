@@ -1,4 +1,3 @@
-// src/components/VerifyResetCode.jsx
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Box, Typography, TextField, Button, Stack, Alert } from '@mui/material'

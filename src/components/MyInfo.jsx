@@ -1,157 +1,209 @@
-import React, {useEffect , useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Box, Typography, Button, Stack, Card, Grid } from '@mui/material'
-import { Divider } from '@mui/material'
-
+import React, { useEffect, useState } from 'react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { Button, Divider, Typography, Paper, Box, Grid } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 export default function MyInfo() {
-    const navigate = useNavigate()
-    const [isLoading, setIsLoading] = useState(true);
-    const [badge, setBadge] = useState([]);
-    const [badge1, setBadge1] = useState(""); // 절약초보 뱃지 : 받은 날짜를 ""으로 초기화
-    const [badge2, setBadge2] = useState(""); // 절약고수 뱃지
-    const [badge3, setBadge3] = useState(""); // 절약왕 뱃지
+  const [badge1, setBadge1] = useState('');
+  const [badge2, setBadge2] = useState('');
+  const [badge3, setBadge3] = useState('');
+  const [challenges, setChallenges] = useState([]);
+  const [successRates, setSuccessRates] = useState([]);
+  const userName = localStorage.getItem('userName') || '이름 없음';
+  const navigate = useNavigate();
 
-    useEffect(() => {
+  useEffect(() => {
+    fetchBadges();
+    fetchMyChallenges();
+  }, []);
 
-        const token = localStorage.getItem('accessToken');
-        console.log("token : ", token);
-        const storedEmail = localStorage.getItem('email')
-        const userId = localStorage.getItem('userId');
-
-        fetchGetBadge();
-
-    }, [navigate])
-
-
-  const fetchGetBadge = async () => {
+  const fetchBadges = async () => {
     try {
-      const token = localStorage.getItem('accessToken')
-      console.log("token : ", token);
-      const response = await fetch('http://localhost:8080/history/getGrantedDate', {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch('http://localhost:8080/history/getGrantedDate', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
-
-      if (response.ok) {
-       
-        const data = await response.json();
-        
-        console.log("데이터 : ", data);
-        setBadge(data)
-        // 뱃지 수 세기
-        data.forEach((bad) => {
-          
-          if (bad.badgeId === 1) {
-            setBadge1(bad.grantedDate)
-          }
-          if (bad.badgeId === 2) {
-            setBadge2(bad.grantedDate)
-          }
-          if (bad.badgeId === 3) {
-            setBadge3(bad.grantedDate);
-          }
-        });
-
-      }
-
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      const data = await res.json();
+      data.forEach((badge) => {
+        if (badge.badgeId === 1) setBadge1(badge.grantedDate);
+        if (badge.badgeId === 2) setBadge2(badge.grantedDate);
+        if (badge.badgeId === 3) setBadge3(badge.grantedDate);
+      });
+    } catch (err) {
+      console.error(err);
     }
   };
 
+  const fetchMyChallenges = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch('http://localhost:8080/challenge/my', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChallenges(data);
+        calculateSuccessRate(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-function drawBadges() {
-    return (
-      <Box display="flex" gap={6}> 
-        {badge1 && (
-          <Grid container spacing={3}>
-            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
+  const typeLabel = {
+    NO_SPENDING: '무지출',
+    SAVING: '절약',
+    CATEGORY_LIMIT: '카테고리 제한',
+  };
 
-            <Box
-              component="img"
-              src="/badge1.png"
-              alt="절약초보 뱃지"
-              sx={{ width: 130, height: 130 }}
+  const calculateSuccessRate = (data) => {
+    const result = {};
+    data.forEach((c) => {
+      const type = typeLabel[c.type];
+      if (!result[type]) result[type] = { total: 0, success: 0 };
+      result[type].total++;
+      if (c.success) result[type].success++;
+    });
 
-            />
-            <Typography>발급일 : {badge1}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-        {badge2 && (
-          <Grid container spacing={3}>
-          <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
+    const formatted = Object.entries(result).map(([type, { total, success }]) => ({
+      type,
+      successRate: Math.round((success / total) * 100),
+      count: total,
+    }));
+    setSuccessRates(formatted);
+  };
 
-            <Box
-              component="img"
-              src="/badge2.png"
-              alt="절약고수 뱃지"
-              sx={{ width: 130, height: 130 }}
-            />
-            <Typography>발급일 : {badge2}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
-        {badge3 && (
-          <Grid container spacing = {3}>
-            <Card sx={{ p: 2, backgroundColor: '#FFF8F0', boxShadow: 3, fontStyle:'italic'}}>
-          <Box>
+  const getStatusText = (c) => {
+    if (new Date(c.endDate) >= new Date()) return '⏳ 진행 중';
+    return c.success ? '✅ 성공' : '❌ 실패';
+  };
 
-            <Box
-              component="img"
-              src="/badge3.png"
-              alt="절약왕 뱃지"
-              sx={{ width: 130, height: 130 }}
-            />
-            <Typography>발급일 : {badge3}</Typography>
-          </Box>
-          </Card>
-          </Grid>
-        )}
+  const ongoing = challenges.filter(c => new Date(c.endDate) >= new Date());
+  const completed = challenges.filter(c => new Date(c.endDate) < new Date());
+
+  return (
+    <Box className="bg-white px-6 py-10 max-w-6xl mx-auto space-y-16">
+      <Box textAlign="center">
+        <Typography variant="h4" fontWeight={600}>내 정보</Typography>
+        <Typography variant="subtitle1" color="text.secondary" mt={1}>👤 사용자 이름: {userName}</Typography>
       </Box>
-    );
-  }
 
- return (
-    <Box sx={{ px: 3, py: 4 }}>
-      <Typography variant="h4" gutterBottom textAlign="center">
-        내 정보
+      <section>
+        <Typography variant="h5" color="primary" textAlign="center" gutterBottom>🎖️ 내 뱃지</Typography>
+        <Grid container spacing={4} justifyContent="center">
+          {badge1 && (
+            <Grid item>
+              <Paper elevation={3} className="p-4 text-center">
+                <img src="/badge1.png" alt="절약초보" className="w-24 mx-auto" />
+                <Typography variant="body2" mt={1}>초보 ({badge1})</Typography>
+              </Paper>
+            </Grid>
+          )}
+          {badge2 && (
+            <Grid item>
+              <Paper elevation={3} className="p-4 text-center">
+                <img src="/badge2.png" alt="절약고수" className="w-24 mx-auto" />
+                <Typography variant="body2" mt={1}>고수 ({badge2})</Typography>
+              </Paper>
+            </Grid>
+          )}
+          {badge3 && (
+            <Grid item>
+              <Paper elevation={3} className="p-4 text-center">
+                <img src="/badge3.png" alt="절약왕" className="w-24 mx-auto" />
+                <Typography variant="body2" mt={1}>왕 ({badge3})</Typography>
+              </Paper>
+            </Grid>
+          )}
+        </Grid>
+      </section>
 
-      </Typography>
-      <Divider sx={{ width: '100%', maxWidth: { xs: '100%', sm: 360, md: 600 }, mx: 'auto', mb: 2 }} />
+      <section>
+        <Typography variant="h5" color="primary" textAlign="center" gutterBottom>🔥 진행 중인 챌린지</Typography>
+        {ongoing.length === 0 ? (
+          <Typography align="center" color="text.secondary">진행 중인 챌린지가 없습니다.</Typography>
+        ) : (
+          <Grid container spacing={2}>
+            {ongoing.map((c) => (
+              <Grid item xs={12} md={6} key={c.id}>
+                <Paper className="p-4 shadow rounded-lg">
+                  <Typography fontWeight={500}>유형: {typeLabel[c.type]}</Typography>
+                  {c.targetCategory && <Typography>카테고리: {c.targetCategory}</Typography>}
+                  {c.targetAmount != null && <Typography>목표 금액: {c.targetAmount.toLocaleString()}원</Typography>}
+                  <Typography>기간: {c.startDate} ~ {c.endDate}</Typography>
+                  <Typography className="text-orange-600 font-medium">{getStatusText(c)}</Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </section>
 
+      <section>
+        <Typography variant="h5" color="primary" textAlign="center" gutterBottom>📦 완료된 챌린지</Typography>
+        {completed.length === 0 ? (
+          <Typography align="center" color="text.secondary">완료된 챌린지가 없습니다.</Typography>
+        ) : (
+          <Grid container spacing={2}>
+            {completed.map((c) => (
+              <Grid item xs={12} md={6} key={c.id}>
+                <Paper className="p-4 shadow rounded-lg">
+                  <Typography fontWeight={500}>유형: {typeLabel[c.type]}</Typography>
+                  {c.targetCategory && <Typography>카테고리: {c.targetCategory}</Typography>}
+                  {c.targetAmount != null && <Typography>목표 금액: {c.targetAmount.toLocaleString()}원</Typography>}
+                  <Typography>기간: {c.startDate} ~ {c.endDate}</Typography>
+                  <Typography className={c.success ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>{getStatusText(c)}</Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </section>
 
+      <section>
+        <Typography variant="h5" color="primary" textAlign="center" gutterBottom>📊 챌린지 유형별 성공률</Typography>
+        {successRates.length > 0 ? (
+          <Box className="w-full h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={successRates} barSize={40}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="type" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Bar dataKey="successRate" fill="#4caf50" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
+        ) : (
+          <Typography align="center" color="text.secondary">아직 성공한 챌린지가 없습니다.</Typography>
+        )}
+      </section>
 
-      <Typography variant="subtitle1" color="primary" textAlign="center" gutterBottom>
-          ⚡️ 뱃지 창고 ⚡️
-
-        </Typography>
-
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center', // 가로 가운데 정렬
-          flexWrap: 'wrap',         // 여러 줄로 넘어갈 수 있게
-          gap: 2,                   // 뱃지 사이 간격
-          mt: 2,                    // 위 여백
-        }}
-      >
-        {drawBadges()}
-      </Box>
+      <section>
+        <Typography variant="h5" color="primary" textAlign="center" gutterBottom>📈 챌린지 참여 횟수</Typography>
+        {successRates.length > 0 ? (
+          <Box className="w-full h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={successRates} barSize={40}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="type" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#2196f3" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
+        ) : (
+          <Typography align="center" color="text.secondary">챌린지 참여 이력이 없습니다.</Typography>
+        )}
+      </section>
     </Box>
-  )
-
-
-    
+  );
 }

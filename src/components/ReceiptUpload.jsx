@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {
-  Box, Typography, Button, Stack, TextField,
-  FormControl, InputLabel, Select, MenuItem,
-  CircularProgress
-} from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
 export default function ReceiptUpload() {
   const [image, setImage] = useState(null);
@@ -36,12 +27,9 @@ export default function ReceiptUpload() {
     try {
       const uploadForm = new FormData();
       uploadForm.append('image', image);
-
       const uploadRes = await axios.post('/receipt/image/upload', uploadForm, { withCredentials: true });
       const relativePath = uploadRes.data;
-
       const ocrRes = await axios.post(`/receipt/ocr?path=${encodeURIComponent(relativePath)}`, {}, { withCredentials: true });
-
       setOcrResult({ ...ocrRes.data, imagePath: relativePath });
       setIsEditing(false);
     } catch (err) {
@@ -83,133 +71,150 @@ export default function ReceiptUpload() {
   };
 
   return (
-    <Box component="main" display="flex" flexDirection="column" alignItems="center" sx={{ pt: 4, px: 2 }}>
-      <Typography variant="h4" gutterBottom>영수증 등록</Typography>
-      <Stack spacing={2} sx={{ width: '100%', maxWidth: 600 }}>
+    <div className="flex-grow bg-white py-10 px-4">
+      <div className="max-w-3xl mx-auto bg-white border border-gray-200 shadow-md rounded-xl p-8 space-y-6">
+        <h1 className="text-3xl font-bold text-center text-gray-800">영수증 등록</h1>
 
-        <Button variant="outlined" component="label" fullWidth startIcon={<CameraAltIcon />}>
-          영수증 촬영
-          <input type="file" accept="image/*" capture="environment" hidden onChange={e => setImage(e.target.files?.[0] || null)} />
-        </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">📸 영수증 촬영</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 shadow-sm"
+              onChange={e => setImage(e.target.files?.[0] || null)}
+            />
+          </label>
 
-        <Button variant="outlined" component="label" fullWidth>
-          이미지 선택
-          <input type="file" accept="image/*" hidden onChange={e => setImage(e.target.files?.[0] || null)} />
-        </Button>
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">🖼️ 이미지 선택</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 shadow-sm"
+              onChange={e => setImage(e.target.files?.[0] || null)}
+            />
+          </label>
+        </div>
 
-        {image && <Typography color="primary">선택된 이미지: {image.name}</Typography>}
+        {image && <p className="text-green-700 text-sm text-center">✅ 선택된 파일: {image.name}</p>}
 
-        <Button variant="contained" onClick={handleOCR} disabled={loadingOCR} fullWidth startIcon={loadingOCR ? <CircularProgress size={20} /> : null}>
-          {loadingOCR ? '분석 중...' : 'OCR 분석'}
-        </Button>
+        <div className="text-center">
+          <button
+            onClick={handleOCR}
+            disabled={loadingOCR}
+            className="mt-2 px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 disabled:opacity-50"
+          >
+            {loadingOCR ? '분석 중...' : 'OCR 분석 시작'}
+          </button>
+        </div>
 
         {ocrResult && (
-          <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-            {isEditing ? (
-              <Stack spacing={2}>
-                <TextField label="상호명" fullWidth value={ocrResult.shopName} onChange={e => handleInputChange('shopName', e.target.value)} InputProps={{ startAdornment: <StorefrontIcon sx={{ mr: 1 }} /> }} />
-                <TextField
-                  label="날짜"
-                  type="date"
-                  fullWidth
-                  value={ocrResult.date ? new Date(ocrResult.date).toISOString().split('T')[0] : ''}
-                  onChange={e => handleInputChange('date', e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  InputProps={{ startAdornment: <CalendarTodayIcon sx={{ mr: 1 }} /> }}
-                />
-                <TextField label="금액" fullWidth value={ocrResult.totalPrice.toLocaleString()} onChange={e => handleInputChange('totalPrice', e.target.value)} InputProps={{ startAdornment: <AttachMoneyIcon sx={{ mr: 1 }} /> }} />
-              </Stack>
-            ) : (
-              <Stack spacing={1}>
-                <Typography><StorefrontIcon sx={{ mr: 1 }} /><strong>상호명:</strong> {ocrResult.shopName}</Typography>
-                <Typography><CalendarTodayIcon sx={{ mr: 1 }} /><strong>날짜:</strong> {ocrResult.date}</Typography>
-                <Typography><AttachMoneyIcon sx={{ mr: 1 }} /><strong>금액:</strong> {ocrResult.totalPrice.toLocaleString()}원</Typography>
-              </Stack>
-            )}
+          <div className="bg-gray-50 p-6 rounded-lg shadow-inner space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">📄 OCR 결과</h2>
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-sm text-gray-600 hover:underline"
+              >
+                {isEditing ? '수정 완료' : '영수증 수정'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {isEditing ? (
+                <>
+                  <input className="w-full border px-3 py-2 rounded" value={ocrResult.shopName} onChange={e => handleInputChange('shopName', e.target.value)} />
+                  <input className="w-full border px-3 py-2 rounded" type="date" value={ocrResult.date} onChange={e => handleInputChange('date', e.target.value)} />
+                  <input className="w-full border px-3 py-2 rounded" value={ocrResult.totalPrice} onChange={e => handleInputChange('totalPrice', e.target.value)} />
+                </>
+              ) : (
+                <>
+                  <p><strong>상호명:</strong> {ocrResult.shopName}</p>
+                  <p><strong>날짜:</strong> {ocrResult.date}</p>
+                  <p><strong>금액:</strong> ₩{ocrResult.totalPrice.toLocaleString()}</p>
+                </>
+              )}
+            </div>
 
             {ocrResult.imagePath && (
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <img src={`/receipt/image/${ocrResult.imagePath}`} alt="업로드된 영수증" style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} />
-              </Box>
+              <img
+                src={`/receipt/image/${ocrResult.imagePath}`}
+                alt="영수증"
+                className="max-w-full h-auto rounded-lg border border-gray-300"
+              />
             )}
 
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" fontWeight="bold">인식된 항목</Typography>
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-2">🛍️ 인식된 항목</h3>
               {ocrResult.items?.length > 0 ? (
-                <Stack spacing={1}>
+                <div className="space-y-2">
                   {ocrResult.items.map((item, idx) => (
-                    <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <div key={idx} className="flex flex-wrap items-center gap-2">
                       {isEditing ? (
                         <>
-                          <TextField
-                            label="이름"
-                            size="small"
-                            value={item.itemName}
-                            onChange={e => {
-                              const updated = [...ocrResult.items];
-                              updated[idx].itemName = e.target.value;
-                              setOcrResult({ ...ocrResult, items: updated });
-                            }}
-                          />
-                          <TextField
-                            label="수량"
-                            size="small"
-                            type="number"
-                            value={item.quantity}
-                            onChange={e => {
-                              const updated = [...ocrResult.items];
-                              updated[idx].quantity = parseInt(e.target.value) || 0;
-                              updated[idx].totalPrice = updated[idx].quantity * updated[idx].unitPrice;
-                              setOcrResult({ ...ocrResult, items: updated });
-                            }}
-                          />
-                          <TextField
-                            label="단가"
-                            size="small"
-                            type="number"
-                            value={item.unitPrice}
-                            onChange={e => {
-                              const updated = [...ocrResult.items];
-                              updated[idx].unitPrice = parseInt(e.target.value) || 0;
-                              updated[idx].totalPrice = updated[idx].quantity * updated[idx].unitPrice;
-                              setOcrResult({ ...ocrResult, items: updated });
-                            }}
-                          />
-                          <Typography variant="body2" sx={{ minWidth: 80 }}>
-                            = {(item.unitPrice * item.quantity).toLocaleString()}원
-                          </Typography>
+                          <input className="border px-2 py-1 rounded" value={item.itemName} onChange={e => {
+                            const updated = [...ocrResult.items];
+                            updated[idx].itemName = e.target.value;
+                            setOcrResult({ ...ocrResult, items: updated });
+                          }} />
+                          <input className="border px-2 py-1 w-16 rounded" type="number" value={item.quantity} onChange={e => {
+                            const updated = [...ocrResult.items];
+                            updated[idx].quantity = parseInt(e.target.value) || 0;
+                            updated[idx].totalPrice = updated[idx].quantity * updated[idx].unitPrice;
+                            setOcrResult({ ...ocrResult, items: updated });
+                          }} />
+                          <input className="border px-2 py-1 w-20 rounded" type="number" value={item.unitPrice} onChange={e => {
+                            const updated = [...ocrResult.items];
+                            updated[idx].unitPrice = parseInt(e.target.value) || 0;
+                            updated[idx].totalPrice = updated[idx].quantity * updated[idx].unitPrice;
+                            setOcrResult({ ...ocrResult, items: updated });
+                          }} />
+                          <span>= ₩{(item.unitPrice * item.quantity).toLocaleString()}</span>
                         </>
                       ) : (
-                        <Typography variant="body2">
-                          {item.itemName} - {item.quantity}개 × {item.unitPrice.toLocaleString()}원 = {item.totalPrice.toLocaleString()}원
-                        </Typography>
+                        <span>{item.itemName} - {item.quantity}개 × ₩{item.unitPrice.toLocaleString()} = ₩{item.totalPrice.toLocaleString()}</span>
                       )}
-                    </Box>
+                    </div>
                   ))}
-                </Stack>
+                </div>
               ) : (
-                <Typography color="text.secondary">인식된 항목이 없습니다.</Typography>
+                <p className="text-sm text-gray-500">인식된 항목이 없습니다.</p>
               )}
-            </Box>
+            </div>
 
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>카테고리</InputLabel>
-              <Select value={keywordId} label="카테고리" onChange={e => setKeywordId(e.target.value)}>
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1 text-gray-700">카테고리 선택</label>
+              <select
+                value={keywordId}
+                onChange={e => setKeywordId(e.target.value)}
+                className="w-full border px-3 py-2 rounded shadow-sm"
+              >
+                <option value="">선택하세요</option>
                 {categories.map(cat => (
-                  <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
-              </Select>
-            </FormControl>
+              </select>
+            </div>
 
-            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-              <Button variant="contained" fullWidth onClick={handleCreateReceipt}>영수증 저장</Button>
-              <Button variant="outlined" fullWidth onClick={() => setIsEditing(!isEditing)}>
-                {isEditing ? '수정 완료' : '영수증 수정'}
-              </Button>
-            </Stack>
-          </Box>
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <button
+                onClick={handleCreateReceipt}
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800"
+              >
+                💾 영수증 저장
+              </button>
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="w-full px-4 py-2 border border-gray-400 rounded"
+              >
+                ✏️ {isEditing ? '수정 완료' : '영수증 수정'}
+              </button>
+            </div>
+          </div>
         )}
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 }
