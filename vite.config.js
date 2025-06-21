@@ -26,7 +26,8 @@ export default defineConfig({
 
   server: {
     host: true,
-
+    historyApiFallback: true,
+    
     proxy: {
       '/receipt': {
         target: 'http://localhost:8080',

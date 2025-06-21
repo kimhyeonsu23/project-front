@@ -25,6 +25,7 @@ import DailyLedger from './components/DailyLedger'
 import MyPage from './components/MyPage'
 import MyInfo from './components/MyInfo'
 import ChallengePage from './components/ChallengePage'
+import ChallengeDetail from './components/ChallengeDetail'; 
 import MyHistory from './components/MyHistory'
 import NoSpendingChallenge from './components/NoSpendingChallenge'
 import CategoryLimitChallenge from './components/CategoryLimitChallenge'
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/challenges/no-spending" element={<NoSpendingChallenge />} />
           <Route path="/challenges/category-limit" element={<CategoryLimitChallenge />} />
           <Route path="/challenges/saving" element={<SavingChallenge />} />
+          <Route path="/challenges/detail/:id" element={<ChallengeDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
