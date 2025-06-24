@@ -193,6 +193,13 @@ export default function SignupForm() {
         >
           회원가입
         </button>
+
+        <button
+          onClick={() => navigate('/')}
+          className="block w-full text-sm text-gray-500 text-center hover:underline"
+        >
+          ← 로그인 화면으로 돌아가기
+        </button>
       </form>
     </div>
   );
