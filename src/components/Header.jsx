@@ -16,13 +16,13 @@ export default function Header() {
     axios.get('/user/me', {
       headers: { Authorization: `Bearer ${token}` },
     })
-    .then((res) => {
-      setUserName(res.data.userName)
-      setPoint(res.data.point)
-    })
-    .catch((err) => {
-      console.error('유저 정보 조회 실패:', err)
-    })
+      .then((res) => {
+        setUserName(res.data.userName)
+        setPoint(res.data.point ?? 0) // point가 없을 경우 0으로 대체
+      })
+      .catch((err) => {
+        console.error('유저 정보 조회 실패:', err)
+      })
   }, [])
 
   const handleLogout = () => {
@@ -39,13 +39,14 @@ export default function Header() {
         >
           BudgetMate
         </h1>
+
         <div className="flex items-center gap-3 text-sm text-gray-700">
           <span className="hidden sm:inline font-medium">
             안녕하세요, <span className="text-indigo-600">{userName}</span> 님
           </span>
 
           <Tooltip title="챌린지 성공 시 포인트 지급됩니다!" arrow>
-            <span className="text-green-600 cursor-help">💰 {point}P</span>
+            <span className="text-green-600 cursor-help inline-block">💰 {point}P</span>
           </Tooltip>
 
           <button
