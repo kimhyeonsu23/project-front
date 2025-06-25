@@ -41,6 +41,9 @@ export default function KakaoCallback() {
         localStorage.setItem('accessToken', accessToken)
         localStorage.setItem('email', email)
         localStorage.setItem('userName', userName)
+
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+
         navigate('/home')
       })
       .catch((err) => {

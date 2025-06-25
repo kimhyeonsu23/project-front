@@ -1,6 +1,12 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
+import axios from 'axios'
+
+const token = localStorage.getItem('accessToken')
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
 
 // 인증 없이 접근 가능한 컴포넌트
 import LoginForm from './components/LoginForm'
@@ -32,6 +38,8 @@ import CategoryLimitChallenge from './components/CategoryLimitChallenge'
 import SavingChallenge from './components/SavingChallenge'
 import EditProfile from './components/EditProfile'
 import Report from './components/Report'; 
+
+
 export default function App() {
   return (
     <BrowserRouter>

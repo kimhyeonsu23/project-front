@@ -11,7 +11,7 @@ import {
 
 const colorMap = {
   '외식': '#A3B9D9',
-  '교통': '#B8D8BA',
+  '교통비': '#B8D8BA',
   '생활비': '#FFE299',
   '쇼핑': '#FFCDD2',
   '건강': '#C5C6F2',
@@ -25,7 +25,7 @@ function PieChartCard({ title, data }) {
   const chartRef = useRef(null);
   const emojiMap = {
     '외식': '🍔',
-    '교통': '🚌',
+    '교통비': '🚌',
     '생활비': '🏠',
     '쇼핑': '🛍️',
     '건강': '🏥',
@@ -36,6 +36,7 @@ function PieChartCard({ title, data }) {
   };
 
   const formatted = Object.entries(data)
+    .filter(([k]) => k !== '수입' && k !== '기타')  // <-- 여기가 핵심
     .map(([k, v]) => ({
       name: k,
       value: v,
@@ -102,6 +103,7 @@ function PieChartCard({ title, data }) {
     </Card>
   );
 }
+
 export default function Home() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
@@ -175,7 +177,7 @@ export default function Home() {
       category: keywordMap[e.keywordId] || '기타',
       description: e.shop || '상호명 없음',
       amount: e.totalPrice,
-      date: e.date,
+      date: new Date(e.date).toLocaleDateString('sv-SE'), // 👈 핵심: "YYYY-MM-DD" 형식 고정
       isIncome: e.keywordId === 8
     }));
 
@@ -199,7 +201,8 @@ export default function Home() {
     const found = acc.find(d => d.date === e.date);
     found ? found.amount += e.amount : acc.push({ date: e.date, amount: e.amount });
     return acc;
-  }, []);
+  }, []).sort((a, b) => a.date.localeCompare(b.date));
+
 
   return (
     <div className="bg-gray-50 min-h-screen p-4 space-y-6 max-w-6xl mx-auto">
