@@ -1,10 +1,29 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
+import axios from 'axios'
+import Tooltip from '@mui/material/Tooltip'
 
 export default function Header() {
   const navigate = useNavigate()
-  const userName = localStorage.getItem('userName') || '사용자'
+  const [userName, setUserName] = useState('사용자')
+  const [point, setPoint] = useState(0)
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+
+    axios.get('/user/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((res) => {
+      setUserName(res.data.userName)
+      setPoint(res.data.point)
+    })
+    .catch((err) => {
+      console.error('유저 정보 조회 실패:', err)
+    })
+  }, [])
 
   const handleLogout = () => {
     localStorage.clear()
@@ -24,6 +43,11 @@ export default function Header() {
           <span className="hidden sm:inline font-medium">
             안녕하세요, <span className="text-indigo-600">{userName}</span> 님
           </span>
+
+          <Tooltip title="챌린지 성공 시 포인트 지급됩니다!" arrow>
+            <span className="text-green-600 cursor-help">💰 {point}P</span>
+          </Tooltip>
+
           <button
             onClick={handleLogout}
             className="flex items-center gap-1 text-red-500 hover:underline"
