@@ -9,6 +9,99 @@ import {
   Card, CardContent, Typography, Button as MUIButton
 } from '@mui/material';
 
+const colorMap = {
+  '외식': '#A3B9D9',
+  '교통': '#B8D8BA',
+  '생활비': '#FFE299',
+  '쇼핑': '#FFCDD2',
+  '건강': '#C5C6F2',
+  '교육': '#FFE9B2',
+  '저축/투자': '#C5F6E5',
+  '수입': '#A5D8FF',
+  '기타': '#E0E0E0'
+};
+
+function PieChartCard({ title, data }) {
+  const chartRef = useRef(null);
+  const emojiMap = {
+    '외식': '🍔',
+    '교통': '🚌',
+    '생활비': '🏠',
+    '쇼핑': '🛍️',
+    '건강': '🏥',
+    '교육': '📚',
+    '저축/투자': '💰',
+    '수입': '💵',
+    '기타': '❓'
+  };
+
+  const formatted = Object.entries(data)
+    .map(([k, v]) => ({
+      name: k,
+      value: v,
+      emoji: emojiMap[k] || '❓'
+    }))
+    .filter(d => d.value > 0);
+
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+    const canvas = await html2canvas(chartRef.current);
+    const link = document.createElement('a');
+    link.download = `${title}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  return (
+    <Card ref={chartRef}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>{title}</Typography>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={formatted}
+                cx="50%" cy="50%" outerRadius={100}
+                label={false}
+                dataKey="value"
+              >
+                {formatted.map((entry, index) => (
+                  <Cell
+                    key={index}
+                    fill={colorMap[entry.name] || '#E0E0E0'}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value, name, props) => [`₩${value.toLocaleString()}`, `${props.payload.emoji} ${name}`]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          {formatted.map((entry, index) => (
+            <div key={index} className="flex items-center space-x-2 text-sm">
+              <div
+                className="w-4 h-4 rounded-sm"
+                style={{ backgroundColor: colorMap[entry.name] || '#E0E0E0' }}
+              ></div>
+              <span>{entry.emoji} {entry.name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 text-right">
+          <MUIButton
+            onClick={handleDownload}
+            size="small"
+            sx={{ textTransform: 'none' }}
+          >
+            이미지 저장
+          </MUIButton>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 export default function Home() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
@@ -22,7 +115,6 @@ export default function Home() {
   const [challenges, setChallenges] = useState([]);
   const [tip, setTip] = useState('');
 
-  const COLORS = ['#A3B9D9', '#B8D8BA', '#FFE299', '#FFCDD2', '#C5C6F2', '#FFE9B2', '#C5F6E5'];
   const tips = [
     "💡 불필요한 구독 서비스는 해지해보세요!",
     "🍱 외식보다는 집밥으로 절약해요!",
@@ -129,7 +221,6 @@ export default function Home() {
           <Typography variant="body1">
             예산 소진 예상일: <strong>{forecast}</strong>
           </Typography>
-
           <div className="w-full bg-gray-200 rounded-full h-6 mt-2 relative">
             <div
               className={`${monthlySpending > budget ? 'bg-red-500' : 'bg-indigo-400'} h-6 rounded-full`}
@@ -139,7 +230,6 @@ export default function Home() {
               {savingRate}%
             </span>
           </div>
-
           {budget > 0 && monthlySpending > budget && recommendation && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 mt-2 rounded-md shadow">
               <p className="font-bold">⚠️ 소비 경고: {recommendation.overspentCategory}</p>
@@ -260,79 +350,5 @@ export default function Home() {
         </MUIButton>
       </div>
     </div>
-  );
-}
-
-function PieChartCard({ title, data }) {
-  const COLORS = ['#A3B9D9', '#B8D8BA', '#FFE299', '#FFCDD2', '#C5C6F2', '#FFE9B2', '#C5F6E5'];
-  const chartRef = useRef(null);
-
-  const emojiMap = {
-    '외식': '🍔',
-    '교통': '🚌',
-    '생활비': '🏠',
-    '쇼핑': '🛍️',
-    '건강': '🏥',
-    '교육': '📚',
-    '저축/투자': '💰'
-  };
-
-  const formatted = Object.entries(data)
-    .map(([k, v]) => ({
-      name: k,
-      value: v,
-      emoji: emojiMap[k] || '❓'
-    }))
-    .filter(d => d.value > 0);
-
-  const handleDownload = async () => {
-    if (!chartRef.current) return;
-    const canvas = await html2canvas(chartRef.current);
-    const link = document.createElement('a');
-    link.download = `${title}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  };
-
-  return (
-    <Card ref={chartRef}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>{title}</Typography>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={formatted}
-                cx="50%" cy="50%" outerRadius={100}
-                label={false}
-                dataKey="value"
-              >
-                {formatted.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value, name, props) => [`₩${value.toLocaleString()}`, `${props.payload.emoji} ${name}`]} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3">
-          {formatted.map((entry, index) => (
-            <div key={index} className="flex items-center space-x-2 text-sm">
-              <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-              <span>{entry.emoji} {entry.name}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 text-right">
-          <MUIButton
-            onClick={handleDownload}
-            size="small"
-            sx={{ textTransform: 'none' }}
-          >
-            이미지 저장
-          </MUIButton>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
