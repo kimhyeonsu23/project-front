@@ -23,7 +23,6 @@ export default function Home() {
   const [tip, setTip] = useState('');
 
   const COLORS = ['#A3B9D9', '#B8D8BA', '#FFE299', '#FFCDD2', '#C5C6F2', '#FFE9B2', '#C5F6E5'];
-  const EMOJIS = ['🍔', '🚌', '🏠', '🛍️', '🏥', '📚', '💰'];
   const tips = [
     "💡 불필요한 구독 서비스는 해지해보세요!",
     "🍱 외식보다는 집밥으로 절약해요!",
@@ -104,14 +103,15 @@ export default function Home() {
   const forecast = forecastDate();
   const savingRate = budget > 0 ? Math.max(0, Math.floor(((budget - monthlySpending) / budget) * 100)) : 0;
   const topCategory = Object.entries(monthlyCategory).reduce((a, b) => b[1] > (a?.[1] || 0) ? b : a, null);
-  const pieData = (obj) => Object.entries(obj).map(([k, v], i) => ({ name: k, value: v, emoji: EMOJIS[i % EMOJIS.length] }));
   const lineData = entries.reduce((acc, e) => {
     const found = acc.find(d => d.date === e.date);
     found ? found.amount += e.amount : acc.push({ date: e.date, amount: e.amount });
     return acc;
   }, []);
+
   return (
     <div className="bg-gray-50 min-h-screen p-4 space-y-6 max-w-6xl mx-auto">
+      {/* 예산 요약 카드 */}
       <Card>
         <CardContent>
           <Typography variant="h5" fontWeight="bold" gutterBottom>
@@ -157,36 +157,33 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      {/* 챌린지 카드 */}
       {challenges.length > 0 && (
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>🧭 진행 중인 챌린지</Typography>
             <ul className="space-y-2 text-sm">
-              {challenges.map((c) => {
-                const commonStyle = 'bg-gray-100 border border-gray-300 text-gray-800';
-
-                return (
-                  <li
-                    key={c.id}
-                    onClick={() => navigate(`/challenges/detail/${c.id}`)}
-                    className={`rounded p-2 cursor-pointer hover:bg-gray-200 transition ${commonStyle}`}
-                  >
-                    ⏳ {c.type} | {c.startDate} ~ {c.endDate}
-                  </li>
-                );
-              })}
+              {challenges.map((c) => (
+                <li
+                  key={c.id}
+                  onClick={() => navigate(`/challenges/detail/${c.id}`)}
+                  className="bg-gray-100 border border-gray-300 text-gray-800 rounded p-2 cursor-pointer hover:bg-gray-200 transition"
+                >
+                  ⏳ {c.type} | {c.startDate} ~ {c.endDate}
+                </li>
+              ))}
             </ul>
-
-
           </CardContent>
         </Card>
       )}
 
+      {/* 파이차트 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PieChartCard title="🧮 이번 주 소비 분포" data={weeklyCategory} />
         <PieChartCard title="🧮 이번 달 소비 분포" data={monthlyCategory} />
       </div>
 
+      {/* 소비 추이 */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>📉 일자별 소비 추이</Typography>
@@ -201,6 +198,7 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      {/* 과소비 카테고리 */}
       {topCategory && (
         <Card>
           <CardContent>
@@ -212,6 +210,7 @@ export default function Home() {
         </Card>
       )}
 
+      {/* 절약 팁 */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>🧠 절약 팁</Typography>
@@ -219,6 +218,7 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      {/* 최근 소비 내역 */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>📋 최근 소비 내역</Typography>
@@ -242,6 +242,7 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      {/* 소비 리포트 버튼 */}
       <div className="text-center">
         <MUIButton
           onClick={() => navigate('/report')}
@@ -266,11 +267,21 @@ function PieChartCard({ title, data }) {
   const COLORS = ['#A3B9D9', '#B8D8BA', '#FFE299', '#FFCDD2', '#C5C6F2', '#FFE9B2', '#C5F6E5'];
   const chartRef = useRef(null);
 
+  const emojiMap = {
+    '외식': '🍔',
+    '교통': '🚌',
+    '생활비': '🏠',
+    '쇼핑': '🛍️',
+    '건강': '🏥',
+    '교육': '📚',
+    '저축/투자': '💰'
+  };
+
   const formatted = Object.entries(data)
-    .map(([k, v], i) => ({
+    .map(([k, v]) => ({
       name: k,
       value: v,
-      emoji: ['🍔', '🚌', '🏠', '🛍️', '🏥', '📚', '💰'][i % 7]
+      emoji: emojiMap[k] || '❓'
     }))
     .filter(d => d.value > 0);
 
