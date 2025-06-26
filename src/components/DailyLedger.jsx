@@ -143,6 +143,12 @@ export default function DailyLedger() {
     }
   }
 
+  const getCurrentTimestamp = () => {
+    const now = new Date()
+    const pad = (n) => String(n).padStart(2, '0')
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`
+  }
+
   const downloadCSV = () => {
     const rows = [['카테고리', '상호', '금액', '날짜']];
     entries.forEach(e => {
@@ -161,7 +167,7 @@ export default function DailyLedger() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${date}_가계부.csv`;
+    a.download = `${getCurrentTimestamp()}_가계부.csv`
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -203,7 +209,7 @@ export default function DailyLedger() {
     })
     doc.setFontSize(12)
     doc.text(`총 지출: ${expenseTotal.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 10)
-    doc.save(`${date}_가계부.pdf`)
+    doc.save(`${getCurrentTimestamp()}_가계부.pdf`)
   }
 
   return (

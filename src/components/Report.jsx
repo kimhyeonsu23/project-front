@@ -18,7 +18,7 @@ export default function Report() {
   const token = localStorage.getItem('accessToken');
   const headers = { Authorization: `Bearer ${token}` };
   const COLORS = ['#A5D8FF', '#B2F2BB', '#FFD6A5', '#FFC9DE', '#D0BFFF', '#FFF3BF', '#C3FAE8'];
-  
+
   useEffect(() => {
     fetchMonthlyStats(selectedYear, selectedMonth);
     fetchMyChallenges();
@@ -74,14 +74,43 @@ export default function Report() {
     });
 
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`Report_${selectedYear}-${String(selectedMonth).padStart(2, '0')}.pdf`);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();  // 210
+    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297
+
+    const imgProps = pdf.getImageProperties(imgData);
+    const imgWidth = pdfWidth;
+    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // 첫 페이지 이미지 추가
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    // 페이지 추가 반복
+    while (heightLeft > 0) {
+      position -= pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const hours = pad(now.getHours());
+    const minutes = pad(now.getMinutes());
+    const seconds = pad(now.getSeconds());
+
+    const filename = `Report_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.pdf`;
+    pdf.save(filename);
   };
+
 
   return (
     <div className="min-h-screen bg-white p-6 space-y-6" id="report-wrapper">
