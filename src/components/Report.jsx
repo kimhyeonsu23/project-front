@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 
 export default function Report() {
   const [categoryStats, setCategoryStats] = useState({});
@@ -64,52 +65,28 @@ export default function Report() {
   const savingRate = budget > 0 ? Math.max(0, 100 - (totalSpending / budget) * 100).toFixed(1) : 0;
   const isOverBudget = budget !== null && totalSpending > budget;
 
-  const downloadPDF = async () => {
+  const downloadPDF = () => {
     const element = document.getElementById('report-wrapper');
     if (!element) return;
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();  // 210
-    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297
-
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgWidth = pdfWidth;
-    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    // 첫 페이지 이미지 추가
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight;
-
-    // 페이지 추가 반복
-    while (heightLeft > 0) {
-      position -= pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-    }
-
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
-    const year = now.getFullYear();
-    const month = pad(now.getMonth() + 1);
-    const day = pad(now.getDate());
-    const hours = pad(now.getHours());
-    const minutes = pad(now.getMinutes());
-    const seconds = pad(now.getSeconds());
+    const filename = `Report_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.pdf`;
 
-    const filename = `Report_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.pdf`;
-    pdf.save(filename);
+    const options = {
+      margin: [10, 10, 10, 10], // 상하좌우 여백 (mm)
+      filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(options).from(element).save();
   };
+
 
 
   return (
