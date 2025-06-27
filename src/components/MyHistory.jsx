@@ -62,16 +62,10 @@ export default function MyHistory() {
   return (
     <main className="min-h-screen bg-white p-5">
       <div className="max-w-3xl mx-auto space-y-6">
-        {/* 요기 */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">내 소비 내역</h1>
-          <button
-            onClick={() => navigate(-1)}
-            className="text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300"
-          >
-            ← 돌아가기
-          </button>
-        </div>
+
+        <h1 className="text-2xl font-bold text-gray-800">내 소비 내역</h1>
+
+
 
         {/* 월/연도 선택 */}
         <div className="flex gap-4 justify-center">
@@ -167,6 +161,15 @@ export default function MyHistory() {
           )}
         </div>
       </div>
+      <div className="pt-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="block w-full text-sm text-gray-500 text-center hover:underline"
+        >
+          ← 마이페이지로 돌아가기
+        </button>
+      </div>
+
     </main>
   )
 }

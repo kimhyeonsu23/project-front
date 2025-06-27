@@ -105,22 +105,6 @@ export default function ChallengePage() {
             color: '#1f2937', // text-gray-800
           }}
         >챌린지</Typography>
-        <Button
-          variant="outlined"
-          onClick={() => navigate(-1)}
-          sx={{
-            textTransform: 'none',
-            fontWeight: 'bold',
-            borderColor: '#cbd5e1',
-            color: '#334155',
-            '&:hover': {
-              borderColor: '#94a3b8',
-              backgroundColor: '#f1f5f9',
-            }
-          }}
-        >
-          ← 돌아가기
-        </Button>
       </Box>
       <Divider sx={{ mb: 4, mt: 1 }} />
 
@@ -185,6 +169,26 @@ export default function ChallengePage() {
           </Paper>
         </Grid>
       </Grid>
+      <Box sx={{ mt: 6, pt: 4, borderTop: '1px solid #e5e7eb' }}>
+        <Button
+          variant="outlined"
+          fullWidth
+          onClick={() => navigate(-1)}
+          sx={{
+            textTransform: 'none',
+            fontWeight: 'bold',
+            borderColor: '#cbd5e1',
+            color: '#334155',
+            '&:hover': {
+              borderColor: '#94a3b8',
+              backgroundColor: '#f1f5f9',
+            }
+          }}
+        >
+          ← 마이페이지로 돌아가기
+        </Button>
+      </Box>
+
     </Box>
   );
 }

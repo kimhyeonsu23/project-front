@@ -3,9 +3,8 @@ import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis
 } from 'recharts';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import html2pdf from 'html2pdf.js';
+import { useNavigate } from 'react-router-dom'; 
 
 export default function Report() {
   const [categoryStats, setCategoryStats] = useState({});
@@ -187,6 +186,14 @@ export default function Report() {
           </ul>
         </div>
       )}
+      <div className="pt-6 border-t border-gray-300">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-full mt-4 py-2 px-4 border border-gray-400 rounded text-gray-700 hover:bg-gray-100 font-semibold"
+        >
+          ← 마이페이지로 돌아가기
+        </button>
+      </div>
     </div>
   );
 }

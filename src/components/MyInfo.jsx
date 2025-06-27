@@ -102,15 +102,9 @@ export default function MyInfo() {
 
   return (
     <main className="min-h-screen bg-white px-5 py-10 space-y-12 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">내 정보</h1>
-        <button
-          onClick={() => navigate(-1)}
-          className="text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300"
-        >
-          ← 돌아가기
-        </button>
-      </div>
+
+      <h1 className="text-2xl font-bold text-gray-800">내 정보</h1>
+
 
       <section>
         <h2 className="text-lg font-semibold text-gray-800 mb-3 text-center">🎖️ 내 뱃지</h2>
@@ -242,6 +236,15 @@ export default function MyInfo() {
           <p className="text-center text-gray-500">챌린지 참여 이력이 없습니다.</p>
         )}
       </section>
+      <div className="pt-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="block w-full text-sm text-gray-500 text-center hover:underline"
+        >
+          ← 마이페이지로 돌아가기
+        </button>
+      </div>
+
     </main>
   );
 }
