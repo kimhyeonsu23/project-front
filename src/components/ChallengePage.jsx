@@ -169,26 +169,14 @@ export default function ChallengePage() {
           </Paper>
         </Grid>
       </Grid>
-      <Box sx={{ mt: 6, pt: 4, borderTop: '1px solid #e5e7eb' }}>
-        <Button
-          variant="outlined"
-          fullWidth
+      <Box className="pt-8">
+        <button
           onClick={() => navigate(-1)}
-          sx={{
-            textTransform: 'none',
-            fontWeight: 'bold',
-            borderColor: '#cbd5e1',
-            color: '#334155',
-            '&:hover': {
-              borderColor: '#94a3b8',
-              backgroundColor: '#f1f5f9',
-            }
-          }}
+          className="block w-full text-sm text-gray-500 text-center hover:underline"
         >
-          ← 마이페이지로 돌아가기
-        </Button>
+          ← 뒤로가기
+        </button>
       </Box>
-
     </Box>
   );
 }

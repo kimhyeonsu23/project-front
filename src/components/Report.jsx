@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis
 } from 'recharts';
 import html2pdf from 'html2pdf.js';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 
 export default function Report() {
   const [categoryStats, setCategoryStats] = useState({});
@@ -15,6 +15,7 @@ export default function Report() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [challenges, setChallenges] = useState([]);
 
+  const navigate = useNavigate(); 
   const token = localStorage.getItem('accessToken');
   const headers = { Authorization: `Bearer ${token}` };
   const COLORS = ['#A5D8FF', '#B2F2BB', '#FFD6A5', '#FFC9DE', '#D0BFFF', '#FFF3BF', '#C3FAE8'];
@@ -189,11 +190,12 @@ export default function Report() {
       <div className="pt-6 border-t border-gray-300">
         <button
           onClick={() => navigate(-1)}
-          className="w-full mt-4 py-2 px-4 border border-gray-400 rounded text-gray-700 hover:bg-gray-100 font-semibold"
+          className="block w-full text-sm text-gray-500 text-center hover:underline"
         >
-          ← 마이페이지로 돌아가기
+          ← 뒤로가기
         </button>
       </div>
+
     </div>
   );
 }

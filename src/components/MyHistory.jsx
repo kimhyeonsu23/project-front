@@ -166,7 +166,7 @@ export default function MyHistory() {
           onClick={() => navigate(-1)}
           className="block w-full text-sm text-gray-500 text-center hover:underline"
         >
-          ← 마이페이지로 돌아가기
+          ← 뒤로가기
         </button>
       </div>
 
