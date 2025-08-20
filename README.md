@@ -42,7 +42,7 @@ npm run dev
 | 항목         | 사용 기술                  |
 | ---------- | ---------------------- |
 | Language   | JavaScript (ES6+), JSX |
-| Framework  | React 18               |
+| Framework  | React               |
 | Build Tool | Vite                   |
 | Styling    | Tailwind CSS           |
 | 협업 도구      | Git, GitHub, Notion    |
